@@ -27,6 +27,7 @@ async function initApp() {
 }
 
 function handleUnauthenticated() {
+    localStorage.removeItem('token');
     if (document.getElementById('dashboard-page')) {
         window.location.href = 'login.html';
     }

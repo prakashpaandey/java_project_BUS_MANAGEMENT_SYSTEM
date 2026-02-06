@@ -82,7 +82,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/validate")
+    @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
         try {
             if (token != null && token.startsWith("Bearer ")) {
