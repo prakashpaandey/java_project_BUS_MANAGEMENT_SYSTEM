@@ -53,16 +53,16 @@ toggleBtn.addEventListener('click', (e) => {
     
     if (isLogin) {
         authTitle.textContent = 'Welcome Back';
-        authSubtitle.textContent = 'Please enter your details to sign in';
+        authSubtitle.textContent = 'Enter your specialized credentials';
         authBtnText.textContent = 'Sign In';
         registerFields.style.display = 'none';
-        authToggleText.innerHTML = "Don't have an account? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 600; text-decoration: none;'>Create one</a>";
+        authToggleText.innerHTML = "Access needed? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 700; text-decoration: none;'>Register Fleet Manager</a>";
     } else {
-        authTitle.textContent = 'Create Account';
-        authSubtitle.textContent = 'Join BusWise to manage your fleet';
-        authBtnText.textContent = 'Sign Up';
+        authTitle.textContent = 'Manager Access';
+        authSubtitle.textContent = 'Setup your new administrative account';
+        authBtnText.textContent = 'Register Now';
         registerFields.style.display = 'block';
-        authToggleText.innerHTML = "Already have an account? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 600; text-decoration: none;'>Sign In</a>";
+        authToggleText.innerHTML = "Have an account? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 700; text-decoration: none;'>Sign In Here</a>";
     }
     document.getElementById('toggle-auth').addEventListener('click', arguments.callee);
 });

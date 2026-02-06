@@ -86,39 +86,68 @@ body {
 .input-group input:focus {
     border-color: var(--primary);
     outline: none;
-    ring: 2px solid rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
-/* Auth Page */
+/* Auth Page Enhanced */
 .auth-container {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    background: radial-gradient(circle at top left, #4f46e5, #000);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    opacity: 0.1;
+    animation: rotate 60s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .auth-card {
     width: 100%;
-    max-width: 450px;
-    padding: 2.5rem;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
+    max-width: 480px;
+    padding: 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    z-index: 10;
 }
 
 .auth-header h1 {
-    font-size: 2rem;
-    color: var(--text);
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin-bottom: 0.5rem;
 }
 
 .auth-header p {
-    color: var(--text-muted);
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
 }
 
 @keyframes fadeIn {
