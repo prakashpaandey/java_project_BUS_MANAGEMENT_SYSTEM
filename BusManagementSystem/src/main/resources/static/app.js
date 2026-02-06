@@ -12,103 +12,37 @@ async function initApp() {
             const data = await response.json();
             if (data.valid) {
                 currentUser = data.admin;
-                showDashboard();
+                if (document.getElementById('dashboard-page')) {
+                    showDashboard();
+                }
             } else {
-                showAuth();
+                handleUnauthenticated();
             }
         } catch (e) {
-            showAuth();
+            handleUnauthenticated();
         }
     } else {
-        showAuth();
+        handleUnauthenticated();
     }
 }
 
-function showAuth() {
-    document.getElementById('auth-page').style.display = 'flex';
-    document.getElementById('dashboard-page').style.display = 'none';
+function handleUnauthenticated() {
+    if (document.getElementById('dashboard-page')) {
+        window.location.href = 'login.html';
+    }
 }
 
 function showDashboard() {
-    document.getElementById('auth-page').style.display = 'none';
-    document.getElementById('dashboard-page').style.display = 'grid';
-    document.getElementById('user-name').textContent = currentUser.fullName;
-    document.getElementById('user-initial').textContent = currentUser.fullName.charAt(0).toUpperCase();
-    loadView('dashboard');
+    const dashboard = document.getElementById('dashboard-page');
+    if (dashboard) {
+        dashboard.style.display = 'grid';
+        document.getElementById('user-name').textContent = currentUser.fullName;
+        document.getElementById('user-initial').textContent = currentUser.fullName.charAt(0).toUpperCase();
+        loadView('dashboard');
+    }
 }
 
-// Auth UI Toggle
-const toggleBtn = document.getElementById('toggle-auth');
-const authTitle = document.getElementById('auth-title');
-const authSubtitle = document.getElementById('auth-subtitle');
-const authBtnText = document.getElementById('auth-btn-text');
-const registerFields = document.getElementById('register-fields');
-const authToggleText = document.getElementById('auth-toggle-text');
-
-let isLogin = true;
-
-toggleBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    isLogin = !isLogin;
-    
-    if (isLogin) {
-        authTitle.textContent = 'Welcome Back';
-        authSubtitle.textContent = 'Enter your specialized credentials';
-        authBtnText.textContent = 'Sign In';
-        registerFields.style.display = 'none';
-        authToggleText.innerHTML = "Access needed? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 700; text-decoration: none;'>Register Fleet Manager</a>";
-    } else {
-        authTitle.textContent = 'Manager Access';
-        authSubtitle.textContent = 'Setup your new administrative account';
-        authBtnText.textContent = 'Register Now';
-        registerFields.style.display = 'block';
-        authToggleText.innerHTML = "Have an account? <a href='#' id='toggle-auth' style='color: var(--primary); font-weight: 700; text-decoration: none;'>Sign In Here</a>";
-    }
-    document.getElementById('toggle-auth').addEventListener('click', arguments.callee);
-});
-
-// Auth Form Submission
-document.getElementById('auth-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    const endpoint = isLogin ? '/auth/login' : '/auth/register';
-    const body = isLogin ? { username, password } : { 
-        username, 
-        password, 
-        fullName: document.getElementById('fullName').value,
-        email: document.getElementById('email').value,
-        role: 'ADMIN' // Default role
-    };
-
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            if (isLogin) {
-                localStorage.setItem('token', data.token);
-                currentToken = data.token;
-                currentUser = data.admin;
-                showDashboard();
-            } else {
-                alert('Account created! Please sign in.');
-                isLogin = true;
-                toggleBtn.click();
-            }
-        } else {
-            alert(data.error || 'Authentication failed');
-        }
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
-});
+// Auth logic moved to separate HTML files (login.html, register.html)
 
 // Logout
 document.getElementById('logout-btn').addEventListener('click', () => {
