@@ -47,19 +47,21 @@ public class AuthController {
             
             Admin admin = adminService.getAdminByIdentifier(username);
 
-            return ResponseEntity.ok(Map.of(
-                "message", "Login successful",
-                "token", jwt,
-                "admin", Map.of(
-                    "id", admin.getId(),
-                    "username", admin.getUsername(),
-                    "email", admin.getEmail(),
-                    "fullName", admin.getFullName(),
-                    "role", admin.getRole()
-                )
-            ));
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("message", "Login successful");
+            response.put("token", jwt);
+            
+            Map<String, Object> adminData = new java.util.HashMap<>();
+            adminData.put("id", admin.getId());
+            adminData.put("username", admin.getUsername());
+            adminData.put("email", admin.getEmail());
+            adminData.put("fullName", admin.getFullName());
+            adminData.put("role", admin.getRole());
+            
+            response.put("admin", adminData);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Invalid credentials"));
         }
     }
 

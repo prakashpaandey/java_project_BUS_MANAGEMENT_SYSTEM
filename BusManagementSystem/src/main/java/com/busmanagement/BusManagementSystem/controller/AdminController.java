@@ -71,24 +71,4 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginAdmin(@RequestBody Map<String, String> credentials) {
-        try {
-            String username = credentials.get("username");
-            String password = credentials.get("password");
-            
-            boolean isValid = adminService.validateAdmin(username, password);
-            if (isValid) {
-                Admin admin = adminService.getAdminByUsername(username);
-                return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
-                    "admin", admin
-                ));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
 }

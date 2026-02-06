@@ -636,7 +636,8 @@ async function apiFetch(endpoint, options = {}) {
                 window.location.reload();
             }
             const errorData = await response.json();
-            throw new Error(errorData.error || 'API request failed');
+            const errorMsg = errorData.message || errorData.error || 'API request failed';
+            throw new Error(errorMsg);
         }
         return response.json();
     } catch (e) {
