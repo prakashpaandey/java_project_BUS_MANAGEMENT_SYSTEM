@@ -10,7 +10,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/drivers")
-@CrossOrigin(origins = "*")
 public class DriverController {
 
     @Autowired
