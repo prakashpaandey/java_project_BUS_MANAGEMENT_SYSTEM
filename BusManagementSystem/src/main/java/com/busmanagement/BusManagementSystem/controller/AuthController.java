@@ -45,7 +45,7 @@ public class AuthController {
             final String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
             
-            Admin admin = adminService.getAdminByUsername(username);
+            Admin admin = adminService.getAdminByIdentifier(username);
 
             return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
@@ -90,7 +90,7 @@ public class AuthController {
                 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 if (jwtUtil.validateToken(jwt, userDetails)) {
-                    Admin admin = adminService.getAdminByUsername(username);
+                    Admin admin = adminService.getAdminByIdentifier(username);
                     return ResponseEntity.ok(Map.of(
                         "valid", true,
                         "admin", Map.of(

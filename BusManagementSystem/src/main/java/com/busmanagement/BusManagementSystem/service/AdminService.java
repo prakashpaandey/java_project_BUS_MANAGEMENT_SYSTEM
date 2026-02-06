@@ -36,6 +36,13 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with username: " + username));
     }
 
+    // Get admin by username or email
+    public Admin getAdminByIdentifier(String identifier) {
+        return adminRepository.findByUsername(identifier)
+                .or(() -> adminRepository.findByEmail(identifier))
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found with: " + identifier));
+    }
+
     // Create new admin
     public Admin createAdmin(Admin admin) {
         if (adminRepository.existsByUsername(admin.getUsername())) {
