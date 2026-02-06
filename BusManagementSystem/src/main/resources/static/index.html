@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BusWise | Premium Bus Management System</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Auth Page -->
+    <div id="auth-page" class="auth-container">
+        <div class="auth-card glass-morphism">
+            <div class="auth-header">
+                <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
+                    <i class="fas fa-bus"></i>
+                    <span>BusWise</span>
+                </div>
+                <h1 id="auth-title">Welcome Back</h1>
+                <p id="auth-subtitle">Please enter your details to sign in</p>
+            </div>
+
+            <form id="auth-form">
+                <div id="register-fields" style="display: none;">
+                    <div class="input-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" placeholder="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="admin_user">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    <span id="auth-btn-text">Sign In</span>
+                    <i class="fas fa-arrow-right" style="margin-left: 0.5rem;"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <p class="text-muted" id="auth-toggle-text">
+                    Don't have an account? <a href="#" id="toggle-auth"
+                        style="color: var(--primary); font-weight: 600; text-decoration: none;">Create one</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-bus"></i>
+                <span>BusWise</span>
+            </div>
+
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-view="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="buses">
+                        <i class="fas fa-bus-alt"></i>
+                        Buses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="routes">
+                        <i class="fas fa-route"></i>
+                        Routes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="schedules">
+                        <i class="fas fa-calendar-alt"></i>
+                        Schedules
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="bookings">
+                        <i class="fas fa-ticket-alt"></i>
+                        Bookings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="drivers">
+                        <i class="fas fa-id-card"></i>
+                        Drivers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-view="passengers">
+                        <i class="fas fa-users"></i>
+                        Passengers
+                    </a>
+                </li>
+            </ul>
+
+            <div class="user-info" style="margin-top: auto; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div
+                        style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                        <span id="user-initial">A</span>
+                    </div>
+                    <div>
+                        <p id="user-name" style="font-weight: 600; font-size: 0.9rem;">Admin User</p>
+                        <p id="user-role" style="font-size: 0.75rem; color: var(--text-muted);">Administrator</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="btn"
+                    style="width: 100%; justify-content: flex-start; gap: 0.5rem; color: var(--error);">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div>
+                    <h1 id="view-title">Dashboard Overview</h1>
+                    <p class="text-muted">Welcome back, manager!</p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="add-entity-btn">
+                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
+                        Add New
+                    </button>
+                </div>
+            </header>
+
+            <div id="view-content">
+                <!-- Content will be injected here via app.js -->
+                <div class="card-grid">
+                    <div class="stat-card">
+                        <h3>Total Buses</h3>
+                        <p id="stat-buses"
+                            style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-top: 1rem;">...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Routes</h3>
+                        <p id="stat-routes"
+                            style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-top: 1rem;">...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Today's Bookings</h3>
+                        <p id="stat-bookings"
+                            style="font-size: 2rem; font-weight: 700; color: var(--success); margin-top: 1rem;">...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding/Editing Entities -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Entity</h2>
+                <button class="btn" onclick="closeModal()"
+                    style="padding: 0.5rem; background: none; color: var(--text-muted);">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            <form id="modal-form">
+                <div id="modal-fields">
+                    <!-- Dynamic fields will be injected here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()"
+                        style="background: #e2e8f0;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
