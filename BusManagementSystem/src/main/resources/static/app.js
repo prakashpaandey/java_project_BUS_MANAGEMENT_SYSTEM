@@ -138,7 +138,7 @@ function updateStats() {
     
     // Efficiency mockup
     document.getElementById('fleetEfficiency').textContent = '94.2%';
-    document.getElementById('activeIncidents').textContent = '0';
+    document.getElementById('activeIncidents').textContent = '3';
 }
 
 function populateBusTable() {
@@ -490,8 +490,53 @@ function populateActivityTable() {
     });
 }
 
-function populateNotifications() {} // STUB
-function updateSystemAlerts() {} // STUB
+function populateNotifications() {
+    const list = document.getElementById('notificationsList');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    state.notifications.forEach(notif => {
+        const item = document.createElement('div');
+        item.className = `notification-item ${notif.read ? '' : 'unread'} ${notif.id === 2 ? 'urgent' : ''}`;
+        item.innerHTML = `
+            <div class="notification-title">${notif.id === 2 ? 'Maintenance Alert' : 'New Booking'}</div>
+            <div class="notification-message">${notif.text}</div>
+            <div class="notification-time"><i class="far fa-clock"></i> ${notif.time}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function updateSystemAlerts() {
+    const list = document.getElementById('systemAlertsList');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    const alerts = [
+        { type: 'danger', icon: 'exclamation-triangle', title: 'Route 5 Delay', message: 'Bus-012 is 15 mins behind schedule' },
+        { type: 'warning', icon: 'wrench', title: 'Maintenance Due', message: '3 buses require scheduled service' },
+        { type: 'info', icon: 'info-circle', title: 'System Healthy', message: 'All backend services operational' }
+    ];
+    
+    alerts.forEach(alert => {
+        const item = document.createElement('div');
+        item.style.padding = '15px';
+        item.style.marginBottom = '10px';
+        item.style.borderRadius = 'var(--radius-sm)';
+        item.style.background = 'var(--light)';
+        item.style.borderLeft = `4px solid var(--${alert.type})`;
+        item.innerHTML = `
+            <div class="d-flex align-center gap-10">
+                <i class="fas fa-${alert.icon}" style="color: var(--${alert.type})"></i>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px;">${alert.title}</div>
+                    <div style="font-size: 12px; color: var(--gray);">${alert.message}</div>
+                </div>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
 
 // Start the app
 document.addEventListener('DOMContentLoaded', initApp);
