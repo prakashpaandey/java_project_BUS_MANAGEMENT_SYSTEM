@@ -42,6 +42,8 @@ async function initApp() {
                     initializeDashboard();
                 } else if (state.currentPage === 'buses.html') {
                     initializeBusManagementPage();
+                } else if (state.currentPage === 'routes.html') {
+                    initializeRoutePlanningPage();
                 }
             } else {
                 handleUnauthenticated();
@@ -96,18 +98,46 @@ async function initializeDashboard() {
     }, 1000);
 }
 
-// Initialize Bus Management Page
-async function initializeBusManagementPage() {
-    state.activeTab = 'bus-management';
+// Initialize Route Planning Page
+async function initializeRoutePlanningPage() {
+    state.activeTab = 'route-planning';
     
     // Load data
     try {
-        const buses = await apiFetch('/buses');
-        state.buses = buses;
-        populateBusManagement();
+        const routes = await apiFetch('/routes');
+        state.routes = routes;
+        populateRoutes();
     } catch (e) {
-        console.error('Failed to load buses:', e);
-        showToast('Error loading fleet data', 'error');
+        console.error('Failed to load routes:', e);
+        showToast('Error loading route data', 'error');
+    }
+
+    // Set up page specific listeners if any (mostly handled by global setup)
+    const addRouteBtn = document.getElementById('addRouteBtn');
+    if (addRouteBtn) addRouteBtn.addEventListener('click', () => openModal('addRouteModal'));
+
+    const cancelRouteModal = document.getElementById('cancelRouteModal');
+    if (cancelRouteModal) cancelRouteModal.addEventListener('click', () => {
+        closeAllModals();
+        document.getElementById('addRouteForm').reset();
+    });
+
+    const saveRouteBtn = document.getElementById('saveRouteBtn');
+    if (saveRouteBtn) saveRouteBtn.addEventListener('click', saveNewRoute);
+
+    const routeSearchInput = document.getElementById('routeSearchInput');
+    if (routeSearchInput) {
+        routeSearchInput.addEventListener('input', () => populateRoutes());
+    }
+
+    const routeViewGridBtn = document.getElementById('routeViewGridBtn');
+    if (routeViewGridBtn) {
+        routeViewGridBtn.addEventListener('click', () => switchRouteView('grid'));
+    }
+
+    const routeViewTableBtn = document.getElementById('routeViewTableBtn');
+    if (routeViewTableBtn) {
+        routeViewTableBtn.addEventListener('click', () => switchRouteView('table'));
     }
 }
 
@@ -724,6 +754,170 @@ function updateSystemAlerts() {
         list.appendChild(item);
     });
 }
+
+function switchRouteView(viewType) {
+    const gridContainer = document.getElementById('routeGridContainer');
+    const tableContainer = document.getElementById('routeTableContainer');
+    const gridBtn = document.getElementById('routeViewGridBtn');
+    const tableBtn = document.getElementById('routeViewTableBtn');
+
+    if (viewType === 'grid') {
+        gridContainer.style.display = 'grid';
+        tableContainer.style.display = 'none';
+        gridBtn.classList.add('btn-primary');
+        gridBtn.classList.remove('btn-outline');
+        tableBtn.classList.add('btn-outline');
+        tableBtn.classList.remove('btn-primary');
+    } else {
+        gridContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        gridBtn.classList.add('btn-outline');
+        gridBtn.classList.remove('btn-primary');
+        tableBtn.classList.add('btn-primary');
+        tableBtn.classList.remove('btn-outline');
+    }
+}
+
+function populateRoutes() {
+    const gridContainer = document.getElementById('routeGridContainer');
+    const tableBody = document.getElementById('routeTableBody');
+    if (!gridContainer || !tableBody) return;
+
+    const searchTerm = document.getElementById('routeSearchInput')?.value.toLowerCase() || '';
+
+    const filteredRoutes = state.routes.filter(route => {
+        return route.source.toLowerCase().includes(searchTerm) || 
+               route.destination.toLowerCase().includes(searchTerm);
+    });
+
+    // Update stats
+    document.getElementById('mgmtTotalRoutes').textContent = state.routes.length;
+
+    // Render Grid
+    gridContainer.innerHTML = '';
+    filteredRoutes.forEach(route => {
+        gridContainer.appendChild(renderRouteCard(route));
+    });
+
+    // Render Table
+    tableBody.innerHTML = '';
+    filteredRoutes.forEach(route => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-weight: 700; padding: 15px;">${route.source}</td>
+            <td>${route.destination}</td>
+            <td>${route.distance} km</td>
+            <td>${route.estimatedTravelTime} mins</td>
+            <td>
+                <div class="d-flex gap-10">
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="editRoute('${route.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="deleteRoute('${route.id}')" style="color: var(--danger);"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function renderRouteCard(route) {
+    const card = document.createElement('div');
+    card.className = 'route-card fade-in';
+    card.innerHTML = `
+        <div class="d-flex justify-between align-start">
+            <span class="badge" style="background: var(--primary-light); color: var(--primary);">RT-${route.id || 'N/A'}</span>
+            <div class="d-flex gap-5">
+                <button class="btn btn-sm btn-icon btn-outline" style="padding: 4px; min-width: 30px;" onclick="editRoute('${route.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-icon btn-outline" style="padding: 4px; min-width: 30px; color: var(--danger);" onclick="deleteRoute('${route.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        
+        <div class="route-path">
+            <div class="route-point">
+                <span class="point-label">Source</span>
+                <span class="point-name">${route.source.split(' ')[0]}</span>
+            </div>
+            <div class="path-arrow">
+                <div class="path-line"></div>
+            </div>
+            <div class="route-point" style="text-align: right;">
+                <span class="point-label">Destination</span>
+                <span class="point-name">${route.destination.split(' ')[0]}</span>
+            </div>
+        </div>
+
+        <div style="font-size: 13px; font-weight: 600; margin-top: 5px; color: var(--gray-dark);">${route.source} → ${route.destination}</div>
+
+        <div class="route-details">
+            <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-road"></i></div>
+                <div class="detail-text">
+                    <span class="detail-value">${route.distance} km</span>
+                    <span class="detail-label">Distance</span>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-clock"></i></div>
+                <div class="detail-text">
+                    <span class="detail-value">${route.estimatedTravelTime}m</span>
+                    <span class="detail-label">Est. Time</span>
+                </div>
+            </div>
+        </div>
+    `;
+    return card;
+}
+
+async function saveNewRoute() {
+    const form = document.getElementById('addRouteForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const routeData = {
+        source: document.getElementById('routeSource').value,
+        destination: document.getElementById('routeDestination').value,
+        distance: parseFloat(document.getElementById('routeDistance').value),
+        estimatedTravelTime: parseInt(document.getElementById('routeTime').value),
+        description: document.getElementById('routeDescription').value
+    };
+    
+    try {
+        await apiFetch('/routes', {
+            method: 'POST',
+            body: JSON.stringify(routeData)
+        });
+        
+        showToast('New route designed and saved!', 'success');
+        closeAllModals();
+        form.reset();
+        
+        // Refresh routes
+        const routes = await apiFetch('/routes');
+        state.routes = routes;
+        populateRoutes();
+        
+    } catch (e) {
+        console.error('Save failed:', e);
+        showToast('Error saving route', 'error');
+    }
+}
+
+// Placeholder for edit/delete
+window.editRoute = (id) => showToast('Edit functionality coming soon', 'info');
+window.deleteRoute = async (id) => {
+    if (confirm('Are you sure you want to delete this route?')) {
+        try {
+            await apiFetch(`/routes/${id}`, { method: 'DELETE' });
+            showToast('Route deleted successfully', 'success');
+            const routes = await apiFetch('/routes');
+            state.routes = routes;
+            populateRoutes();
+        } catch (e) {
+            showToast('Error deleting route', 'error');
+        }
+    }
+};
 
 // Start the app
 document.addEventListener('DOMContentLoaded', initApp);
