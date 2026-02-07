@@ -1,6 +1,24 @@
 const API_BASE = '/api';
 let currentUser = null;
 let currentToken = localStorage.getItem('token');
+const DateTime = luxon.DateTime;
+
+// Application state
+const state = {
+    buses: [],
+    routes: [],
+    schedules: [],
+    drivers: [],
+    bookings: [],
+    passengers: [],
+    activities: [],
+    notifications: [],
+    activeTab: 'dashboard',
+    darkMode: false,
+    sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+    liveTrackingInterval: null,
+    realTimeDataInterval: null
+};
 
 // Auth State Management
 async function initApp() {
@@ -9,16 +27,21 @@ async function initApp() {
             const response = await fetch(`${API_BASE}/auth/validate`, {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
+            
+            if (!response.ok) {
+                handleUnauthenticated();
+                return;
+            }
+
             const data = await response.json();
             if (data.valid) {
                 currentUser = data.admin;
-                if (document.getElementById('dashboard-page')) {
-                    showDashboard();
-                }
+                initializeDashboard();
             } else {
                 handleUnauthenticated();
             }
         } catch (e) {
+            console.error('Auth check failed:', e);
             handleUnauthenticated();
         }
     } else {
@@ -28,557 +51,447 @@ async function initApp() {
 
 function handleUnauthenticated() {
     localStorage.removeItem('token');
-    if (document.getElementById('dashboard-page')) {
+    if (window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/')) {
         window.location.href = 'login.html';
     }
 }
 
-function showDashboard() {
-    const dashboard = document.getElementById('dashboard-page');
-    if (dashboard) {
-        dashboard.style.display = 'grid';
-        document.getElementById('user-name').textContent = currentUser.fullName;
-        document.getElementById('user-initial').textContent = currentUser.fullName.charAt(0).toUpperCase();
-        loadView('dashboard');
+// Initialize the dashboard
+async function initializeDashboard() {
+    // Set user info
+    if (currentUser) {
+        document.getElementById('userName').textContent = currentUser.fullName;
+        document.getElementById('userAvatarText').textContent = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
     }
-}
 
-// Auth logic moved to separate HTML files (login.html, register.html)
-
-// Logout
-document.getElementById('logout-btn').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.reload();
-});
-
-// Navigation
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-        loadView(link.dataset.view);
-    });
-});
-
-async function loadView(view) {
-    const content = document.getElementById('view-content');
-    const title = document.getElementById('view-title');
-    const addBtn = document.getElementById('add-entity-btn');
+    // Apply saved preferences
+    applySavedPreferences();
     
-    currentView = view;
-    addBtn.style.display = view === 'dashboard' ? 'none' : 'flex';
-
-    switch(view) {
-        case 'dashboard':
-            title.textContent = 'Dashboard Overview';
-            content.innerHTML = `
-                <div class="card-grid">
-                    <div class="stat-card">
-                        <h3>Total Buses</h3>
-                        <p id="stat-buses" style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-top: 1rem;">...</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Routes</h3>
-                        <p id="stat-routes" style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-top: 1rem;">...</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Today's Bookings</h3>
-                        <p id="stat-bookings" style="font-size: 2rem; font-weight: 700; color: var(--success); margin-top: 1rem;">...</p>
-                    </div>
-                </div>
-            `;
-            loadStats();
-            break;
-        case 'buses':
-            title.textContent = 'Manage Buses';
-            content.innerHTML = '<div class="stat-card"><p>Loading buses...</p></div>';
-            loadBuses();
-            break;
-        case 'routes':
-            title.textContent = 'Manage Routes';
-            content.innerHTML = '<div class="stat-card"><p>Loading routes...</p></div>';
-            loadRoutes();
-            break;
-        case 'schedules':
-            title.textContent = 'Manage Schedules';
-            content.innerHTML = '<div class="stat-card"><p>Loading schedules...</p></div>';
-            loadSchedules();
-            break;
-        case 'drivers':
-            title.textContent = 'Manage Drivers';
-            content.innerHTML = '<div class="stat-card"><p>Loading drivers...</p></div>';
-            loadDrivers();
-            break;
-        case 'bookings':
-            title.textContent = 'Manage Bookings';
-            content.innerHTML = '<div class="stat-card"><p>Loading bookings...</p></div>';
-            loadBookings();
-            break;
-        case 'passengers':
-            title.textContent = 'Manage Passengers';
-            content.innerHTML = '<div class="stat-card"><p>Loading passengers...</p></div>';
-            loadPassengers();
-            break;
-        default:
-            content.innerHTML = `<div class="stat-card"><h3>${view.toUpperCase()}</h3><p>Coming soon...</p></div>`;
-    }
+    // Initialize UI components
+    initializeUI();
+    
+    // Load data from API
+    await loadDashboardData();
+    
+    // Initialize real-time updates
+    initializeRealTimeUpdates();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Show welcome message
+    setTimeout(() => {
+        showToast(`Welcome back, ${currentUser.fullName.split(' ')[0]}`, 'success');
+    }, 1000);
 }
 
-async function loadStats() {
+async function loadDashboardData() {
     try {
-        const [buses, routes, bookings] = await Promise.all([
+        // Fetch all necessary data in parallel
+        const [buses, routes, schedules, drivers, bookings, passengers] = await Promise.all([
             apiFetch('/buses'),
             apiFetch('/routes'),
-            apiFetch('/bookings')
+            apiFetch('/schedules'),
+            apiFetch('/drivers'),
+            apiFetch('/bookings'),
+            apiFetch('/passengers')
         ]);
-        document.getElementById('stat-buses').textContent = buses.length;
-        document.getElementById('stat-routes').textContent = routes.length;
-        document.getElementById('stat-bookings').textContent = bookings.length;
+        
+        state.buses = buses;
+        state.routes = routes;
+        state.schedules = schedules;
+        state.drivers = drivers;
+        state.bookings = bookings;
+        state.passengers = passengers;
+        
+        // Map data for display
+        updateStats();
+        populateBusTable();
+        updateActiveBusesList();
+        
+        // Mock some activities and notifications for now
+        // In a real app, these would come from the backend too
+        state.activities = generateMockActivities();
+        state.notifications = generateMockNotifications();
+        
+        populateActivityTable();
+        populateNotifications();
+        updateSystemAlerts();
+        
+        // Initialize Charts
+        initializeCharts();
+        
     } catch (e) {
-        console.error('Failed to load stats', e);
+        console.error('Failed to load dashboard data:', e);
+        showToast('Error loading real-time data', 'error');
     }
 }
 
-async function loadBuses() {
-    try {
-        const buses = await apiFetch('/buses');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Number</th>
-                        <th>Type</th>
-                        <th>Capacity</th>
-                        <th>Fare/KM</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        buses.forEach(bus => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${bus.busNumber}</td>
-                    <td>${bus.busType}</td>
-                    <td>${bus.totalSeats}</td>
-                    <td>$${bus.farePerKm}</td>
-                    <td>
-                        <span class="badge ${bus.isAvailable ? 'badge-success' : 'badge-danger'}">
-                            ${bus.isAvailable ? 'Available' : 'Unavailable'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="editBus(${bus.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn" style="padding: 0.5rem; color: var(--error);" onclick="deleteBus(${bus.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        content.innerHTML = buses.length ? html : '<div class="stat-card"><p>No buses found.</p></div>';
-    } catch (e) {
-        alert('Failed to load buses');
-    }
-}
-
-async function loadRoutes() {
-    try {
-        const routes = await apiFetch('/routes');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Source</th>
-                        <th>Destination</th>
-                        <th>Distance (KM)</th>
-                        <th>Est. Time</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        routes.forEach(route => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${route.source}</td>
-                    <td>${route.destination}</td>
-                    <td>${route.distance}</td>
-                    <td>${route.estimatedTravelTime} mins</td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="editRoute(${route.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn" style="padding: 0.5rem; color: var(--error);" onclick="deleteRoute(${route.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        content.innerHTML = routes.length ? html : '<div class="stat-card"><p>No routes found.</p></div>';
-    } catch (e) {
-        alert('Failed to load routes');
-    }
-}
-
-async function loadSchedules() {
-    try {
-        const schedules = await apiFetch('/schedules');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Bus</th>
-                        <th>Route</th>
-                        <th>Departure</th>
-                        <th>Arrival</th>
-                        <th>Price</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        schedules.forEach(s => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${s.bus.busNumber}</td>
-                    <td>${s.route.source} → ${s.route.destination}</td>
-                    <td>${new Date(s.departureTime).toLocaleString()}</td>
-                    <td>${new Date(s.arrivalTime).toLocaleString()}</td>
-                    <td>$${s.price}</td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="editSchedule(${s.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn" style="padding: 0.5rem; color: var(--error);" onclick="deleteSchedule(${s.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        content.innerHTML = schedules.length ? html : '<div class="stat-card"><p>No schedules found.</p></div>';
-    } catch (e) {
-        alert('Failed to load schedules');
-    }
-}
-
-async function loadDrivers() {
-    try {
-        const drivers = await apiFetch('/drivers');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>License</th>
-                        <th>Contact</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        drivers.forEach(d => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${d.fullName}</td>
-                    <td>${d.licenseNumber}</td>
-                    <td>${d.phoneNumber}</td>
-                    <td>
-                        <span class="badge ${d.isAvailable ? 'badge-success' : 'badge-warning'}">
-                            ${d.isAvailable ? 'Active' : 'On Leave'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="editDriver(${d.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn" style="padding: 0.5rem; color: var(--error);" onclick="deleteDriver(${d.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        content.innerHTML = drivers.length ? html : '<div class="stat-card"><p>No drivers found.</p></div>';
-    } catch (e) {
-        alert('Failed to load drivers');
-    }
-}
-
-// Modal Logic
-function openModal(title, fieldsHtml, onSave) {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-fields').innerHTML = fieldsHtml;
-    document.getElementById('modal-overlay').style.display = 'flex';
+function updateStats() {
+    document.getElementById('totalBuses').textContent = state.buses.length || 0;
+    document.getElementById('totalRoutes').textContent = state.routes.length || 0;
+    document.getElementById('totalPassengers').textContent = state.passengers.length.toLocaleString() || '0';
     
-    document.getElementById('modal-form').onsubmit = (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        onSave(data);
+    // Calculate total revenue from bookings
+    const totalRevenue = state.bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+    document.getElementById('dailyRevenue').textContent = '$' + totalRevenue.toLocaleString();
+    
+    // Efficiency mockup
+    document.getElementById('fleetEfficiency').textContent = '94.2%';
+    document.getElementById('activeIncidents').textContent = '0';
+}
+
+function populateBusTable() {
+    const tableBody = document.getElementById('busTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    const displayBuses = state.buses.slice(0, 10); // Show first 10
+    
+    displayBuses.forEach(bus => {
+        const tr = document.createElement('tr');
+        
+        // Find if this bus has a schedule/route
+        const busSchedule = state.schedules.find(s => s.bus && s.bus.busNumber === bus.busNumber);
+        const routeName = busSchedule ? `${busSchedule.route.source} → ${busSchedule.route.destination}` : 'Unassigned';
+        
+        // Find driver
+        const driverName = busSchedule && busSchedule.driver ? busSchedule.driver.fullName : 'To be assigned';
+        
+        const statusClass = bus.isAvailable ? 'status-active' : 'status-maintenance';
+        const statusText = bus.isAvailable ? 'Available' : 'Maintenance';
+        
+        tr.innerHTML = `
+            <td style="font-weight: 700;">${bus.busNumber}</td>
+            <td><div class="bus-type">${bus.busType}</div></td>
+            <td>${bus.totalSeats} seats</td>
+            <td>${routeName}</td>
+            <td>${driverName}</td>
+            <td>
+                <span class="status-badge ${statusClass}">
+                    <i class="fas fa-circle"></i> ${statusText}
+                </span>
+            </td>
+            <td><div class="efficiency-mini">95%</div></td>
+            <td>
+                <div class="d-flex gap-10">
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="viewBusDetails('${bus.id}')" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="editBus('${bus.id}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="deleteBus('${bus.id}')" title="Delete" style="color: var(--danger); border-color: var(--danger);">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function updateActiveBusesList() {
+    const list = document.getElementById('activeBusesList');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    // Only show "Available" buses as active in the tracking list
+    const activeBuses = state.buses.filter(b => b.isAvailable).slice(0, 5);
+    
+    activeBuses.forEach(bus => {
+        const busSchedule = state.schedules.find(s => s.bus && s.bus.busNumber === bus.busNumber);
+        const routeName = busSchedule ? busSchedule.route.source + '...' : 'Standby';
+        
+        const item = document.createElement('div');
+        item.className = 'tracking-item';
+        item.innerHTML = `
+            <div class="tracking-bus-info">
+                <div class="tracking-bus-id">${bus.busNumber}</div>
+                <div class="tracking-route">${routeName}</div>
+            </div>
+            <div class="tracking-status status-on-route">
+                <i class="fas fa-circle"></i> Active
+            </div>
+            <button class="btn btn-sm btn-icon" onclick="trackBus('${bus.id}')">
+                <i class="fas fa-crosshairs"></i>
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+// UI & Interaction
+function initializeUI() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+}
+
+function updateDateTime() {
+    const now = DateTime.now();
+    const timeElement = document.getElementById('currentTime');
+    const dateElement = document.getElementById('currentDate');
+    
+    if (timeElement) timeElement.textContent = now.toFormat('hh:mm:ss a');
+    if (dateElement) dateElement.textContent = now.toFormat('EEEE, MMMM dd, yyyy');
+}
+
+function setupEventListeners() {
+    // Sidebar Toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    // Navigation
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const view = this.querySelector('span').textContent.toLowerCase().replace(' ', '-');
+            handleNavigation(view, this);
+        });
+    });
+
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleUnauthenticated();
+        });
+    }
+
+    // Modal Events
+    const addBusBtn = document.getElementById('addBusBtn');
+    if (addBusBtn) addBusBtn.addEventListener('click', () => openModal('addBusModal'));
+    
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeAllModals);
+    
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeAllModals);
+
+    const saveBusBtn = document.getElementById('saveBusBtn');
+    if (saveBusBtn) saveBusBtn.addEventListener('click', saveNewBus);
+}
+
+function handleNavigation(view, linkElement) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    linkElement.classList.add('active');
+    
+    state.activeTab = view;
+    showToast(`Navigated to ${linkElement.querySelector('span').textContent}`, 'info');
+    
+    // In a real SPA, this would swap content. 
+    // Here we might just filter or update the current view if we stay on one page.
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const contentArea = document.querySelector('.content-area');
+    const icon = document.querySelector('#sidebarToggle i');
+    
+    sidebar.classList.toggle('sidebar-collapsed');
+    contentArea.classList.toggle('sidebar-collapsed-margin');
+    
+    if (sidebar.classList.contains('sidebar-collapsed')) {
+        icon.className = 'fas fa-chevron-right';
+        state.sidebarCollapsed = true;
+    } else {
+        icon.className = 'fas fa-chevron-left';
+        state.sidebarCollapsed = false;
+    }
+    
+    localStorage.setItem('sidebarCollapsed', state.sidebarCollapsed);
+}
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    document.body.style.overflow = 'auto';
+}
+
+async function saveNewBus() {
+    const form = document.getElementById('addBusForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const busData = {
+        busNumber: document.getElementById('busId').value,
+        busType: document.getElementById('busType').value,
+        totalSeats: parseInt(document.getElementById('capacity').value),
+        farePerKm: 1.5, // Default or gathered from form
+        isAvailable: document.getElementById('status').value === 'active'
     };
-}
-
-function closeModal() {
-    document.getElementById('modal-overlay').style.display = 'none';
-}
-
-// Add Entity Logic
-document.getElementById('add-entity-btn').addEventListener('click', () => {
-    switch(currentView) {
-        case 'buses':
-            showAddBusModal();
-            break;
-        case 'routes':
-            showAddRouteModal();
-            break;
-        case 'schedules':
-            showAddScheduleModal();
-            break;
-        case 'drivers':
-            showAddDriverModal();
-            break;
-    }
-});
-
-async function showAddScheduleModal() {
-    const [buses, routes, drivers] = await Promise.all([
-        apiFetch('/buses'),
-        apiFetch('/routes'),
-        apiFetch('/drivers')
-    ]);
     
-    const fields = `
-        <div class="input-group">
-            <label>Bus</label>
-            <select name="bus_id" class="input-group input" style="width: 100%; padding: 0.75rem;">
-                ${buses.map(b => `<option value="${b.id}">${b.busNumber} (${b.busType})</option>`).join('')}
-            </select>
-        </div>
-        <div class="input-group">
-            <label>Route</label>
-            <select name="route_id" class="input-group input" style="width: 100%; padding: 0.75rem;">
-                ${routes.map(r => `<option value="${r.id}">${r.source} to ${r.destination}</option>`).join('')}
-            </select>
-        </div>
-        <div class="input-group">
-            <label>Driver</label>
-            <select name="driver_id" class="input-group input" style="width: 100%; padding: 0.75rem;">
-                ${drivers.map(d => `<option value="${d.id}">${d.fullName}</option>`).join('')}
-            </select>
-        </div>
-        <div class="input-group">
-            <label>Departure Time</label>
-            <input type="datetime-local" name="departureTime" required>
-        </div>
-        <div class="input-group">
-            <label>Arrival Time</label>
-            <input type="datetime-local" name="arrivalTime" required>
-        </div>
-    `;
-    
-    openModal('Add New Schedule', fields, async (data) => {
-        const body = {
-            bus: { id: data.bus_id },
-            route: { id: data.route_id },
-            driver: { id: data.driver_id },
-            departureTime: data.departureTime,
-            arrivalTime: data.arrivalTime
-        };
-        try {
-            await apiFetch('/schedules', {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
-            closeModal();
-            loadSchedules();
-        } catch (e) {
-            alert('Error adding schedule');
-        }
-    });
-}
-
-function showAddDriverModal() {
-    const fields = `
-        <div class="input-group">
-            <label>Full Name</label>
-            <input type="text" name="name" required placeholder="Driver Name">
-        </div>
-        <div class="input-group">
-            <label>License Number</label>
-            <input type="text" name="licenseNumber" required placeholder="LIC-9988">
-        </div>
-        <div class="input-group">
-            <label>Contact Number</label>
-            <input type="text" name="contactNumber" required placeholder="9876543210">
-        </div>
-        <div class="input-group">
-            <label>Email</label>
-            <input type="email" name="email" required placeholder="driver@buswise.com">
-        </div>
-        <div class="input-group">
-            <label>Date of Birth</label>
-            <input type="date" name="dateOfBirth" required>
-        </div>
-    `;
-    openModal('Add New Driver', fields, async (data) => {
-        try {
-            await apiFetch('/drivers', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            closeModal();
-            loadDrivers();
-        } catch (e) {
-            alert('Error adding driver');
-        }
-    });
-}
-
-async function loadBookings() {
     try {
-        const bookings = await apiFetch('/bookings');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Booking #</th>
-                        <th>Passenger</th>
-                        <th>Bus</th>
-                        <th>Status</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        bookings.forEach(b => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${b.bookingNumber}</td>
-                    <td>${b.passenger.fullName}</td>
-                    <td>${b.schedule.bus.busNumber}</td>
-                    <td>
-                        <span class="badge ${b.bookingStatus === 'CONFIRMED' ? 'badge-success' : 'badge-danger'}">
-                            ${b.bookingStatus}
-                        </span>
-                    </td>
-                    <td>$${b.totalAmount}</td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="viewBooking(${b.id})"><i class="fas fa-eye"></i></button>
-                    </td>
-                </tr>
-            `;
+        const response = await apiFetch('/buses', {
+            method: 'POST',
+            body: JSON.stringify(busData)
         });
         
-        html += '</tbody></table>';
-        content.innerHTML = bookings.length ? html : '<div class="stat-card"><p>No bookings found.</p></div>';
+        showToast(`Bus ${busData.busNumber} added successfully!`, 'success');
+        closeAllModals();
+        await loadDashboardData(); // Refresh data
+        
     } catch (e) {
-        alert('Failed to load bookings');
+        console.error('Save failed:', e);
+        showToast('Error saving bus', 'error');
     }
 }
 
-async function loadPassengers() {
-    try {
-        const passengers = await apiFetch('/passengers');
-        const content = document.getElementById('view-content');
-        let html = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        passengers.forEach(p => {
-            html += `
-                <tr>
-                    <td style="font-weight: 600;">${p.fullName}</td>
-                    <td>${p.email}</td>
-                    <td>${p.phoneNumber}</td>
-                    <td>
-                        <button class="btn" style="padding: 0.5rem; color: var(--primary);" onclick="editPassenger(${p.id})"><i class="fas fa-edit"></i></button>
-                    </td>
-                </tr>
-            `;
+// Charts (Adapted from index.html)
+function initializeCharts() {
+    const passengerCtx = document.getElementById('passengerChart');
+    if (passengerCtx) {
+        new Chart(passengerCtx, {
+            type: 'line',
+            data: {
+                labels: ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM', '12AM'],
+                datasets: [{
+                    label: 'Current Passengers',
+                    data: [120, 450, 380, 520, 680, 310, 80],
+                    borderColor: '#4361ee',
+                    backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
         });
-        
-        html += '</tbody></table>';
-        content.innerHTML = passengers.length ? html : '<div class="stat-card"><p>No passengers found.</p></div>';
-    } catch (e) {
-        alert('Failed to load passengers');
+    }
+
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [1200, 1900, 1500, 2100, 2400, 1800, 1300],
+                    backgroundColor: '#7209b7',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
     }
 }
 
-// Global functions for inline HTML calls
-window.editBus = (id) => alert('Edit bus ' + id);
-window.deleteBus = async (id) => {
-    if (confirm('Delete this bus?')) {
-        await apiFetch(`/buses/${id}`, { method: 'DELETE' });
-        loadBuses();
-    }
-};
-window.editRoute = (id) => alert('Edit route ' + id);
-window.deleteRoute = async (id) => {
-    if (confirm('Delete this route?')) {
-        await apiFetch(`/routes/${id}`, { method: 'DELETE' });
-        loadRoutes();
-    }
-};
-window.closeModal = closeModal;
-window.viewBooking = (id) => alert('Viewing booking ' + id);
-window.editPassenger = (id) => alert('Edit passenger ' + id);
-window.editDriver = (id) => alert('Edit driver ' + id);
-window.deleteDriver = async (id) => {
-    if (confirm('Delete this driver?')) {
-        await apiFetch(`/drivers/${id}`, { method: 'DELETE' });
-        loadDrivers();
-    }
-};
-window.editSchedule = (id) => alert('Edit schedule ' + id);
-window.deleteSchedule = async (id) => {
-    if (confirm('Delete this schedule?')) {
-        await apiFetch(`/schedules/${id}`, { method: 'DELETE' });
-        loadSchedules();
-    }
-};
-
+// Utility API Link
 async function apiFetch(endpoint, options = {}) {
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${currentToken}`
     };
     
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-        if (!response.ok) {
-            if (response.status === 403) {
-                localStorage.removeItem('token');
-                window.location.reload();
-            }
-            const errorData = await response.json();
-            const errorMsg = errorData.message || errorData.error || 'API request failed';
-            throw new Error(errorMsg);
+    const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    if (!response.ok) {
+        if (response.status === 403 || response.status === 401) {
+            handleUnauthenticated();
         }
-        return response.json();
-    } catch (e) {
-        console.error(e);
-        throw e;
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'API request failed');
+    }
+    return response.json();
+}
+
+// Mock Data Generators
+function generateMockActivities() {
+    return [
+        { time: '10:45 AM', activity: 'Schedule Updated', busId: 'BUS-102', details: 'Route change confirmed' },
+        { time: '09:30 AM', activity: 'Maintenance Log', busId: 'BUS-055', details: 'Oil change completed' },
+        { time: '08:15 AM', activity: 'New Driver', busId: 'N/A', details: 'Added: Sarah Smith' }
+    ];
+}
+
+function generateMockNotifications() {
+    return [
+        { id: 1, text: 'New booking on Route 5', time: '5m ago', read: false },
+        { id: 2, text: 'Bus-012 maintenance due', time: '1h ago', read: false }
+    ];
+}
+
+// Toasts
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+}
+
+function applySavedPreferences() {
+    if (state.sidebarCollapsed) {
+        const sidebar = document.getElementById('sidebar');
+        const contentArea = document.querySelector('.content-area');
+        if (sidebar) sidebar.classList.add('sidebar-collapsed');
+        if (contentArea) contentArea.classList.add('sidebar-collapsed-margin');
+        const icon = document.querySelector('#sidebarToggle i');
+        if (icon) icon.className = 'fas fa-chevron-right';
     }
 }
 
-initApp();
+function initializeRealTimeUpdates() {
+    // Simulated updates every 20 seconds
+    setInterval(() => {
+        if (state.activeTab === 'dashboard') {
+            // Randomly update a stat to show "life"
+            const passCount = parseInt(document.getElementById('totalPassengers').textContent.replace(',', ''));
+            document.getElementById('totalPassengers').textContent = (passCount + Math.floor(Math.random() * 5)).toLocaleString();
+        }
+    }, 20000);
+}
+
+function populateActivityTable() {
+    const tableBody = document.getElementById('activityTableBody');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    state.activities.forEach(act => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${act.time}</td><td>${act.activity}</td><td>${act.busId}</td><td>${act.details}</td>`;
+        tableBody.appendChild(tr);
+    });
+}
+
+function populateNotifications() {} // STUB
+function updateSystemAlerts() {} // STUB
+
+// Start the app
+document.addEventListener('DOMContentLoaded', initApp);

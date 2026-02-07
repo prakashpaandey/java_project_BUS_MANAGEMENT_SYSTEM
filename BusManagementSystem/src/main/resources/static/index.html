@@ -4,146 +4,2465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BusWise | Premium Bus Management System</title>
-    <link rel="stylesheet" href="index.css">
+    <title>TransitVision Pro | Advanced Bus Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --primary-light: #eef2ff;
+            --secondary: #7209b7;
+            --secondary-dark: #5a08a1;
+            --accent: #f72585;
+            --accent-dark: #d81b6f;
+            --success: #06d6a0;
+            --success-dark: #05c090;
+            --warning: #ffd166;
+            --warning-dark: #e6bc5c;
+            --danger: #ef476f;
+            --danger-dark: #d43d63;
+            --info: #118ab2;
+            --dark: #1a1a2e;
+            --darker: #0f0f1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --gray-dark: #495057;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --header-height: 80px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 15px 50px rgba(0, 0, 0, 0.12);
+            --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --radius: 12px;
+            --radius-lg: 20px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition-fast: all 0.15s ease;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            overflow-x: hidden;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .dark-mode {
+            background-color: var(--darker);
+            color: var(--light);
+        }
+
+        .dark-mode .card,
+        .dark-mode .sidebar,
+        .dark-mode .header,
+        .dark-mode .modal,
+        .dark-mode .table-card,
+        .dark-mode .stat-card,
+        .dark-mode .chart-card {
+            background-color: #1e1e2e;
+            color: var(--light);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 25px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            height: var(--header-height);
+            box-shadow: var(--shadow);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 28px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+            position: relative;
+        }
+
+        .logo-text span::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 18px;
+        }
+
+        .notification-bell {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--accent);
+            color: white;
+            font-size: 11px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border: 2px solid var(--primary);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 50px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--warning) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-role {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: flex;
+            min-height: calc(100vh - var(--header-height));
+            margin-top: var(--header-height);
+            transition: var(--transition);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            padding: 30px 0;
+            box-shadow: var(--shadow);
+            z-index: 999;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar-collapsed .sidebar-link span,
+        .sidebar-collapsed .sidebar-section-title {
+            display: none;
+        }
+
+        .sidebar-collapsed .sidebar-link {
+            justify-content: center;
+            padding: 15px 10px;
+        }
+
+        .sidebar-collapsed .logo-icon {
+            width: 45px;
+            height: 45px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 20px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
+            z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .sidebar-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 25px 0 15px 15px;
+        }
+
+        .sidebar-item {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 80%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+
+        .sidebar-link i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .sidebar-link.active i {
+            transform: scale(1.1);
+        }
+
+        .sidebar-link .badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: white;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        .sidebar-collapsed+.content-area,
+        .sidebar-collapsed-margin {
+            margin-left: var(--sidebar-collapsed) !important;
+            width: calc(100% - var(--sidebar-collapsed)) !important;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        .dashboard-title span {
+            color: var(--primary);
+            position: relative;
+        }
+
+        .dashboard-title span::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: rgba(67, 97, 238, 0.15);
+            z-index: -1;
+            border-radius: 4px;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-time-widget {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-width: 300px;
+        }
+
+        .date-time-widget i {
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .date-time-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .current-time {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+            font-family: 'Inter', monospace;
+        }
+
+        .current-date {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+
+        .stat-card.bus::before {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+
+        .stat-card.route::before {
+            background: linear-gradient(90deg, var(--secondary) 0%, rgba(114, 9, 183, 0.3) 100%);
+        }
+
+        .stat-card.passenger::before {
+            background: linear-gradient(90deg, var(--accent) 0%, rgba(247, 37, 133, 0.3) 100%);
+        }
+
+        .stat-card.revenue::before {
+            background: linear-gradient(90deg, var(--success) 0%, rgba(6, 214, 160, 0.3) 100%);
+        }
+
+        .stat-card.efficiency::before {
+            background: linear-gradient(90deg, var(--warning) 0%, rgba(255, 209, 102, 0.3) 100%);
+        }
+
+        .stat-card.incidents::before {
+            background: linear-gradient(90deg, var(--danger) 0%, rgba(239, 71, 111, 0.3) 100%);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .stat-card.bus .stat-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        .stat-card.route .stat-icon {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            box-shadow: 0 10px 20px rgba(114, 9, 183, 0.3);
+        }
+
+        .stat-card.passenger .stat-icon {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            box-shadow: 0 10px 20px rgba(247, 37, 133, 0.3);
+        }
+
+        .stat-card.revenue .stat-icon {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            box-shadow: 0 10px 20px rgba(6, 214, 160, 0.3);
+        }
+
+        .stat-card.efficiency .stat-icon {
+            background: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+            box-shadow: 0 10px 20px rgba(255, 209, 102, 0.3);
+        }
+
+        .stat-card.incidents .stat-icon {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            box-shadow: 0 10px 20px rgba(239, 71, 111, 0.3);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-info h3 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .stat-info p {
+            color: var(--gray);
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        .stat-change i {
+            font-size: 14px;
+        }
+
+        /* Charts Section */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .chart-subtitle {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-btn {
+            padding: 8px 16px;
+            background: var(--gray-light);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chart-btn.active,
+        .chart-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+
+        .chart-container {
+            height: 320px;
+            position: relative;
+        }
+
+        /* Tables */
+        .table-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .table-subtitle {
+            font-size: 14px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            font-size: 15px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-lg {
+            padding: 15px 30px;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #d1d9e0;
+            transform: translateY(-3px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 5px 15px rgba(6, 214, 160, 0.2);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--dark);
+            box-shadow: 0 5px 15px rgba(255, 209, 102, 0.2);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 5px 15px rgba(239, 71, 111, 0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-rounded {
+            border-radius: 50px;
+        }
+
+        .btn-icon {
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-light);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        .data-table thead {
+            background: var(--light);
+        }
+
+        .data-table th {
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--gray-light);
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--gray-light);
+            vertical-align: middle;
+        }
+
+        .data-table tbody tr {
+            transition: var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(67, 97, 238, 0.03);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .status-badge i {
+            font-size: 10px;
+        }
+
+        .status-active {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--success-dark);
+        }
+
+        .status-inactive {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--danger-dark);
+        }
+
+        .status-maintenance {
+            background: rgba(255, 209, 102, 0.15);
+            color: #b0890f;
+        }
+
+        .status-on-route {
+            background: rgba(67, 97, 238, 0.15);
+            color: var(--primary-dark);
+        }
+
+        .status-delayed {
+            background: rgba(255, 107, 0, 0.15);
+            color: #cc5800;
+        }
+
+        .status-early {
+            background: rgba(0, 200, 117, 0.15);
+            color: #00a865;
+        }
+
+        /* Bus Fleet Section */
+        .bus-fleet {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .bus-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .bus-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .bus-card.premium::before {
+            content: 'PREMIUM';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: var(--warning);
+            color: var(--dark);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 5px 30px;
+            transform: rotate(45deg);
+            z-index: 1;
+            letter-spacing: 1px;
+        }
+
+        .bus-header {
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bus-id {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .bus-type {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        .bus-body {
+            padding: 25px;
+        }
+
+        .bus-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .bus-info-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .bus-info-item:hover {
+            background: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        .bus-info-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .bus-info-label {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .bus-route {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--radius);
+            position: relative;
+        }
+
+        .route-dots {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            position: relative;
+        }
+
+        .route-line {
+            position: absolute;
+            top: 10px;
+            left: 19px;
+            width: 2px;
+            height: 40px;
+            background: var(--gray-light);
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gray);
+            z-index: 1;
+        }
+
+        .dot.start {
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(6, 214, 160, 0.2);
+        }
+
+        .dot.end {
+            background: var(--danger);
+            box-shadow: 0 0 0 4px rgba(239, 71, 111, 0.2);
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .route-stops {
+            font-size: 13px;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .bus-footer {
+            padding: 20px 25px;
+            background: var(--light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(30px) scale(0.95);
+            transition: var(--transition);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        /* Map Container */
+        .map-container {
+            height: 500px;
+            background: var(--light);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 40px;
+            position: relative;
+            border: 1px solid var(--gray-light);
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="white" stroke-width="0.5" stroke-opacity="0.2"/></svg>');
+            background-size: 50px 50px;
+        }
+
+        .map-placeholder i {
+            font-size: 70px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            z-index: 1;
+        }
+
+        .map-placeholder h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            z-index: 1;
+            font-weight: 700;
+        }
+
+        .map-placeholder p {
+            font-size: 16px;
+            opacity: 0.8;
+            z-index: 1;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        /* Live Tracking */
+        .live-tracking-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .live-tracking-map {
+            flex: 2;
+            height: 500px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--light);
+            border: 1px solid var(--gray-light);
+        }
+
+        .tracking-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 350px;
+        }
+
+        .tracking-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .tracking-card h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .tracking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tracking-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .tracking-item:hover {
+            background: var(--primary-light);
+            transform: translateX(5px);
+        }
+
+        .tracking-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tracking-item.active .tracking-bus-id {
+            color: white;
+        }
+
+        .tracking-bus-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .tracking-info {
+            flex: 1;
+        }
+
+        .tracking-bus-id {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+        }
+
+        .tracking-route {
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .tracking-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Notifications Panel */
+        .notifications-panel {
+            position: fixed;
+            top: var(--header-height);
+            right: -400px;
+            width: 380px;
+            height: calc(100vh - var(--header-height));
+            background: white;
+            box-shadow: var(--shadow-dark);
+            z-index: 1999;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notifications-panel.active {
+            right: 0;
+        }
+
+        .notifications-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--gray-light);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .notifications-header h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .notifications-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .notifications-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .notification-item {
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: var(--primary-light);
+            transform: translateX(5px);
+        }
+
+        .notification-item.unread {
+            background: white;
+            box-shadow: var(--shadow);
+        }
+
+        .notification-item.urgent {
+            border-left-color: var(--danger);
+        }
+
+        .notification-item.warning {
+            border-left-color: var(--warning);
+        }
+
+        .notification-item.success {
+            border-left-color: var(--success);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .notification-message {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-warning {
+            color: #b0890f;
+        }
+
+        .text-gray {
+            color: var(--gray);
+        }
+
+        .bg-light {
+            background: var(--light);
+        }
+
+        .bg-primary-light {
+            background: var(--primary-light);
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .mb-30 {
+            margin-bottom: 30px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mt-30 {
+            margin-top: 30px;
+        }
+
+        .p-20 {
+            padding: 20px;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-10 {
+            gap: 10px;
+        }
+
+        .gap-20 {
+            gap: 20px;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .live-tracking-container {
+                flex-direction: column;
+            }
+
+            .tracking-sidebar {
+                max-width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .tracking-card {
+                flex: 1;
+                min-width: 300px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .bus-fleet {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .header-actions .search-bar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .date-time-widget {
+                width: 100%;
+            }
+
+            .bus-fleet {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .table-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .header-container {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 15px 0;
+            }
+
+            .logo {
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .modal {
+                width: 95%;
+                margin: 10px;
+            }
+
+            .notifications-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .chart-actions {
+                flex-wrap: wrap;
+            }
+
+            .bus-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(67, 97, 238, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast.success .toast-icon {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--danger);
+        }
+
+        .toast.warning .toast-icon {
+            background: rgba(255, 209, 102, 0.15);
+            color: #b0890f;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-close:hover {
+            color: var(--danger);
+        }
+    </style>
 </head>
 
 <body>
-    <!-- Dashboard Page -->
-    <div id="dashboard-page" class="dashboard-container">
-        <aside class="sidebar">
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container header-container">
             <div class="logo">
-                <i class="fas fa-bus"></i>
-                <span>BusWise</span>
+                <div class="logo-icon">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <div class="logo-text">Transit<span>Vision Pro</span></div>
             </div>
 
-            <ul class="nav-links">
-                <li class="nav-item">
-                    <a href="#" class="nav-link active" data-view="dashboard">
-                        <i class="fas fa-chart-line"></i>
-                        Dashboard
+            <div class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="header-actions">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search buses, routes, drivers...">
+                </div>
+
+                <div class="notification-bell" id="notificationBell">
+                    <i class="far fa-bell"></i>
+                    <div class="notification-badge">5</div>
+                </div>
+
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-info">
+                        <div class="user-name">John Doe</div>
+                        <div class="user-role">System Administrator</div>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notifications Panel -->
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h3>Notifications</h3>
+            <p>You have 5 unread notifications</p>
+        </div>
+        <div class="notifications-body" id="notificationsList">
+            <!-- Notifications will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="sidebar-section-title">Main</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="buses">
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
                         <i class="fas fa-bus-alt"></i>
-                        Buses
+                        <span>Bus Management</span>
+                        <span class="badge">3</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="routes">
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
                         <i class="fas fa-route"></i>
-                        Routes
+                        <span>Route Planning</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="schedules">
-                        <i class="fas fa-calendar-alt"></i>
-                        Schedules
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="bookings">
+
+                <li class="sidebar-section-title">Operations</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
                         <i class="fas fa-ticket-alt"></i>
-                        Bookings
+                        <span>Ticketing</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="drivers">
-                        <i class="fas fa-id-card"></i>
-                        Drivers
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Passenger Management</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-view="passengers">
-                        <i class="fas fa-users"></i>
-                        Passengers
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Scheduling</span>
+                        <span class="badge">2</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Analytics</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reports & Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Live Tracking</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Maintenance</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-wrench"></i>
+                        <span>Maintenance</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-gas-pump"></i>
+                        <span>Fuel Management</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Safety & Compliance</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">System</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-cogs"></i>
+                        <span>System Settings</span>
                     </a>
                 </li>
             </ul>
-
-            <div class="user-info" style="margin-top: auto; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                    <div
-                        style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
-                        <span id="user-initial">A</span>
-                    </div>
-                    <div>
-                        <p id="user-name" style="font-weight: 600; font-size: 0.9rem;">Admin User</p>
-                        <p id="user-role" style="font-size: 0.75rem; color: var(--text-muted);">Administrator</p>
-                    </div>
-                </div>
-                <button id="logout-btn" class="btn"
-                    style="width: 100%; justify-content: flex-start; gap: 0.5rem; color: var(--error);">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </button>
-            </div>
         </aside>
 
-        <main class="main-content">
-            <header class="header">
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
                 <div>
-                    <h1 id="view-title">Dashboard Overview</h1>
-                    <p class="text-muted">Welcome back, manager!</p>
+                    <h1 class="dashboard-title">Bus Management <span>Dashboard</span></h1>
+                    <p class="chart-subtitle">Real-time monitoring and analytics for your transit fleet</p>
                 </div>
-                <div class="actions">
-                    <button class="btn btn-primary" id="add-entity-btn">
-                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
-                        Add New
+                <div class="dashboard-actions">
+                    <div class="date-time-widget" id="dateTime">
+                        <i class="far fa-clock"></i>
+                        <div class="date-time-info">
+                            <div class="current-time" id="currentTime">12:45:30</div>
+                            <div class="current-date" id="currentDate">Friday, October 27, 2023</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-rounded" id="quickReportBtn">
+                        <i class="fas fa-download"></i> Export Report
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <div id="view-content">
-                <!-- Content will be injected here via app.js -->
-                <div class="card-grid">
-                    <div class="stat-card">
-                        <h3>Total Buses</h3>
-                        <p id="stat-buses"
-                            style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-top: 1rem;">...</p>
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="stat-card bus fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-bus"></i>
                     </div>
-                    <div class="stat-card">
-                        <h3>Total Routes</h3>
-                        <p id="stat-routes"
-                            style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-top: 1rem;">...</p>
+                    <div class="stat-info">
+                        <h3 id="totalBuses">48</h3>
+                        <p>Total Buses</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +2 this month
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Today's Bookings</h3>
-                        <p id="stat-bookings"
-                            style="font-size: 2rem; font-weight: 700; color: var(--success); margin-top: 1rem;">...</p>
+                </div>
+
+                <div class="stat-card route fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-route"></i>
                     </div>
+                    <div class="stat-info">
+                        <h3 id="totalRoutes">22</h3>
+                        <p>Active Routes</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +1 this month
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card passenger fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalPassengers">2,847</h3>
+                        <p>Daily Passengers</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +8.5% this week
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card revenue fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="dailyRevenue">$8,950</h3>
+                        <p>Daily Revenue</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> +12.3% this week
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card efficiency fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="fleetEfficiency">94.2%</h3>
+                        <p>Fleet Efficiency</p>
+                        <div class="stat-change negative">
+                            <i class="fas fa-arrow-down"></i> -1.2% today
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card incidents fade-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeIncidents">3</h3>
+                        <p>Active Incidents</p>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-down"></i> -2 this week
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-container">
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Passenger Traffic Analysis</h3>
+                            <p class="chart-subtitle">Real-time passenger volume across routes</p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-btn active" data-period="day">Today</button>
+                            <button class="chart-btn" data-period="week">This Week</button>
+                            <button class="chart-btn" data-period="month">This Month</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="passengerChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Revenue & Performance</h3>
+                            <p class="chart-subtitle">Revenue trends and operational efficiency</p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-btn active" data-period="day">Today</button>
+                            <button class="chart-btn" data-period="week">This Week</button>
+                            <button class="chart-btn" data-period="month">This Month</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Bus Tracking -->
+            <div class="table-card fade-in">
+                <div class="table-header">
+                    <div>
+                        <h3 class="table-title">Live Bus Tracking</h3>
+                        <p class="table-subtitle">Real-time location and status of all active buses</p>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i> Filter Buses
+                        </button>
+                        <button class="btn btn-primary" id="refreshTrackingBtn">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="live-tracking-container">
+                    <div class="live-tracking-map">
+                        <div class="map-placeholder">
+                            <i class="fas fa-map-marked-alt pulse"></i>
+                            <h3>Live Bus Tracking Map</h3>
+                            <p>Interactive map showing real-time bus locations with live updates</p>
+                            <div class="spinner mt-20"></div>
+                        </div>
+                    </div>
+                    <div class="tracking-sidebar">
+                        <div class="tracking-card">
+                            <h4>Active Buses</h4>
+                            <div class="tracking-list" id="activeBusesList">
+                                <!-- Active buses will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="tracking-card">
+                            <h4>Bus Status Summary</h4>
+                            <div class="bus-info-grid">
+                                <div class="bus-info-item">
+                                    <div class="bus-info-value" id="onRouteCount">18</div>
+                                    <div class="bus-info-label">On Route</div>
+                                </div>
+                                <div class="bus-info-item">
+                                    <div class="bus-info-value" id="atStationCount">12</div>
+                                    <div class="bus-info-label">At Station</div>
+                                </div>
+                                <div class="bus-info-item">
+                                    <div class="bus-info-value" id="delayedCount">3</div>
+                                    <div class="bus-info-label">Delayed</div>
+                                </div>
+                                <div class="bus-info-item">
+                                    <div class="bus-info-value" id="offlineCount">2</div>
+                                    <div class="bus-info-label">Offline</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bus Fleet Overview -->
+            <div class="table-card fade-in">
+                <div class="table-header">
+                    <div>
+                        <h3 class="table-title">Bus Fleet Overview</h3>
+                        <p class="table-subtitle">Complete fleet management and monitoring</p>
+                    </div>
+                    <div class="table-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <button class="btn btn-primary" id="addBusBtn">
+                            <i class="fas fa-plus"></i> Add New Bus
+                        </button>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Bus ID</th>
+                                <th>Type</th>
+                                <th>Capacity</th>
+                                <th>Current Route</th>
+                                <th>Driver</th>
+                                <th>Status</th>
+                                <th>Efficiency</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="busTableBody">
+                            <!-- Bus data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary">View All Buses</button>
+                    <button class="btn btn-primary">Generate Fleet Report</button>
+                </div>
+            </div>
+
+            <!-- Recent Activities & Alerts -->
+            <div class="charts-container">
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Recent Activities</h3>
+                        <button class="btn btn-sm btn-secondary">View All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Activity</th>
+                                    <th>Bus ID</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTableBody">
+                                <!-- Activities will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-card fade-in">
+                    <div class="chart-header">
+                        <h3 class="chart-title">System Alerts</h3>
+                        <button class="btn btn-sm btn-secondary">Clear All</button>
+                    </div>
+                    <div id="systemAlertsList">
+                        <!-- Alerts will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="table-card fade-in">
+                <div class="table-header">
+                    <h3 class="table-title">Quick Actions</h3>
+                    <p class="table-subtitle">Frequently used actions for quick access</p>
+                </div>
+                <div class="d-flex gap-20" style="flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-icon">
+                        <i class="fas fa-route"></i>
+                    </button>
+                    <button class="btn btn-success btn-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </button>
+                    <button class="btn btn-warning btn-icon">
+                        <i class="fas fa-wrench"></i>
+                    </button>
+                    <button class="btn btn-danger btn-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </button>
+                    <button class="btn btn-primary btn-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                    <button class="btn btn-success btn-icon">
+                        <i class="fas fa-file-export"></i>
+                    </button>
+                    <button class="btn btn-warning btn-icon">
+                        <i class="fas fa-cog"></i>
+                    </button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal for Adding/Editing Entities -->
-    <div id="modal-overlay" class="modal-overlay">
+    <!-- Add Bus Modal -->
+    <div class="modal-overlay" id="addBusModal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modal-title">Add New Entity</h2>
-                <button class="btn" onclick="closeModal()"
-                    style="padding: 0.5rem; background: none; color: var(--text-muted);">
-                    <i class="fas fa-times fa-lg"></i>
-                </button>
+                <h3 class="modal-title">Add New Bus to Fleet</h3>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
             </div>
-            <form id="modal-form">
-                <div id="modal-fields">
-                    <!-- Dynamic fields will be injected here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" onclick="closeModal()"
-                        style="background: #e2e8f0;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Changes</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                <form id="addBusForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="busId">Bus ID *</label>
+                            <input type="text" id="busId" class="form-control" placeholder="e.g., BUS-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="busType">Bus Type *</label>
+                            <select id="busType" class="form-control" required>
+                                <option value="">Select Type</option>
+                                <option value="standard">Standard</option>
+                                <option value="articulated">Articulated</option>
+                                <option value="double-decker">Double Decker</option>
+                                <option value="minibus">Minibus</option>
+                                <option value="electric">Electric</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="premium">Premium</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="capacity">Passenger Capacity *</label>
+                            <input type="number" id="capacity" class="form-control" placeholder="e.g., 50" required
+                                min="10" max="200">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="manufacturer">Manufacturer *</label>
+                            <input type="text" id="manufacturer" class="form-control" placeholder="e.g., Volvo"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="model">Model *</label>
+                            <input type="text" id="model" class="form-control" placeholder="e.g., B8R" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="year">Year *</label>
+                            <input type="number" id="year" class="form-control" placeholder="e.g., 2023" min="2000"
+                                max="2024" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="licensePlate">License Plate *</label>
+                            <input type="text" id="licensePlate" class="form-control" placeholder="e.g., ABC-123"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="status">Initial Status *</label>
+                            <select id="status" class="form-control" required>
+                                <option value="active">Active</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="on-route">On Route</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="assignedRoute">Assigned Route</label>
+                        <select id="assignedRoute" class="form-control">
+                            <option value="">Select Route (Optional)</option>
+                            <option value="route-1">Downtown Express</option>
+                            <option value="route-2">University Line</option>
+                            <option value="route-3">Airport Shuttle</option>
+                            <option value="route-4">North-South Corridor</option>
+                            <option value="route-5">City Tour</option>
+                            <option value="route-6">Green Line</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="busFeatures">Special Features</label>
+                        <div class="d-flex gap-20" style="flex-wrap: wrap;">
+                            <label class="d-flex align-center gap-10">
+                                <input type="checkbox" name="busFeatures" value="wifi">
+                                <span>Wi-Fi</span>
+                            </label>
+                            <label class="d-flex align-center gap-10">
+                                <input type="checkbox" name="busFeatures" value="charging">
+                                <span>USB Charging</span>
+                            </label>
+                            <label class="d-flex align-center gap-10">
+                                <input type="checkbox" name="busFeatures" value="ac">
+                                <span>Air Conditioning</span>
+                            </label>
+                            <label class="d-flex align-center gap-10">
+                                <input type="checkbox" name="busFeatures" value="accessible">
+                                <span>Accessibility</span>
+                            </label>
+                            <label class="d-flex align-center gap-10">
+                                <input type="checkbox" name="busFeatures" value="cctv">
+                                <span>CCTV Security</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveBusBtn">Save Bus</button>
+            </div>
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script src="app.js"></script>
+
+    </script>
 </body>
 
 </html>
