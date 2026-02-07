@@ -38,12 +38,40 @@ async function initApp() {
             if (data.valid) {
                 currentUser = data.admin;
                 initializeCommonUI();
+
+                // Role-based Access Control & Redirection
+                const adminPages = ['index.html', 'buses.html', 'routes.html', 'passengers.html'];
+                const passengerPages = ['passenger-dashboard.html', 'book-ticket.html', 'my-bookings.html'];
+
+                if (currentUser.role === 'USER') {
+                    // Redirect passengers away from admin pages
+                    if (adminPages.includes(state.currentPage) || state.currentPage === '') {
+                        window.location.href = 'passenger-dashboard.html';
+                        return;
+                    }
+                } else if (currentUser.role === 'ADMIN') {
+                    // Redirect admins away from passenger pages if they land there
+                    if (passengerPages.includes(state.currentPage)) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+
+                // Initialize Page Logic
                 if (state.currentPage === 'index.html' || state.currentPage === '') {
                     initializeDashboard();
                 } else if (state.currentPage === 'buses.html') {
                     initializeBusManagementPage();
                 } else if (state.currentPage === 'routes.html') {
                     initializeRoutePlanningPage();
+                } else if (state.currentPage === 'passengers.html') {
+                    initializePassengerManagementPage();
+                } else if (state.currentPage === 'passenger-dashboard.html') {
+                    initializePassengerDashboard();
+                } else if (state.currentPage === 'book-ticket.html') {
+                    initializeBookTicketPage();
+                } else if (state.currentPage === 'my-bookings.html') {
+                    initializeMyBookingsPage();
                 }
             } else {
                 handleUnauthenticated();
@@ -60,7 +88,10 @@ async function initApp() {
 function handleUnauthenticated() {
     localStorage.removeItem('token');
     const path = window.location.pathname;
-    if (path.includes('index.html') || path.includes('buses.html') || path.endsWith('/')) {
+    const adminPages = ['index.html', 'buses.html', 'routes.html', 'passengers.html'];
+    const passengerPages = ['passenger-dashboard.html', 'book-ticket.html', 'my-bookings.html'];
+    
+    if (adminPages.includes(state.currentPage) || passengerPages.includes(state.currentPage) || path.endsWith('/')) {
         window.location.href = 'login.html';
     }
 }
@@ -96,6 +127,232 @@ async function initializeDashboard() {
     setTimeout(() => {
         showToast(`Welcome back, ${currentUser.fullName.split(' ')[0]}`, 'success');
     }, 1000);
+}
+
+// Initialize Passenger Management Page
+async function initializePassengerManagementPage() {
+    state.activeTab = 'passenger-management';
+    
+    // Load data
+    try {
+        const passengers = await apiFetch('/passengers');
+        state.passengers = passengers;
+        populatePassengers();
+    } catch (e) {
+        console.error('Failed to load passengers:', e);
+        showToast('Error loading passenger data', 'error');
+    }
+
+    // Set up page specific listeners
+    const addPassengerBtn = document.getElementById('addPassengerBtn');
+    if (addPassengerBtn) addPassengerBtn.addEventListener('click', () => openModal('addPassengerModal'));
+
+    const cancelPassengerModal = document.getElementById('cancelPassengerModal');
+    if (cancelPassengerModal) cancelPassengerModal.addEventListener('click', () => {
+        closeAllModals();
+        document.getElementById('addPassengerForm').reset();
+    });
+
+    const savePassengerBtn = document.getElementById('savePassengerBtn');
+    if (savePassengerBtn) savePassengerBtn.addEventListener('click', saveNewPassenger);
+
+    const passengerSearchInput = document.getElementById('passengerSearchInput');
+    if (passengerSearchInput) {
+        passengerSearchInput.addEventListener('input', () => populatePassengers());
+    }
+
+    const passengerViewGridBtn = document.getElementById('passengerViewGridBtn');
+    if (passengerViewGridBtn) {
+        passengerViewGridBtn.addEventListener('click', () => switchPassengerView('grid'));
+    }
+
+    const passengerViewTableBtn = document.getElementById('passengerViewTableBtn');
+    if (passengerViewTableBtn) {
+        passengerViewTableBtn.addEventListener('click', () => switchPassengerView('table'));
+    }
+}
+
+// Passenger Specific Initializations
+async function initializePassengerDashboard() {
+    state.activeTab = 'passenger-home';
+    document.getElementById('welcomeName').textContent = currentUser.fullName.split(' ')[0];
+    
+    try {
+        const bookings = await apiFetch(`/bookings/passenger/${currentUser.id}`);
+        state.myBookings = bookings;
+        
+        // Update Stats
+        document.getElementById('statTotalTrips').textContent = bookings.length;
+        const totalSpent = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        document.getElementById('statSpent').textContent = `NPR ${totalSpent.toLocaleString()}`;
+        
+        // Populate Upcoming Trip
+        const upcoming = bookings.filter(b => b.bookingStatus === 'CONFIRMED').sort((a,b) => new Date(a.bookingDate) - new Date(b.bookingDate))[0];
+        if (upcoming) {
+            const container = document.getElementById('upcomingBookings');
+            container.innerHTML = `
+                <div class="booking-card fade-in">
+                    <div class="trip-info">
+                        <h4>${upcoming.schedule.route.source} to ${upcoming.schedule.route.destination}</h4>
+                        <p><i class="far fa-calendar-alt"></i> ${new Date(upcoming.schedule.departureTime).toLocaleDateString()} | <i class="far fa-clock"></i> ${new Date(upcoming.schedule.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        <p><i class="fas fa-bus"></i> ${upcoming.schedule.bus.busNumber} (${upcoming.schedule.bus.busType})</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="status-badge status-confirmed">Confirmed</span>
+                        <div style="margin-top: 10px; font-weight: 700; color: var(--primary);">Seat ${upcoming.seatNumber}</div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error('Failed to load passenger data:', e);
+    }
+}
+
+async function initializeBookTicketPage() {
+    state.activeTab = 'book-ticket';
+    
+    try {
+        const routes = await apiFetch('/routes');
+        const sourceSelect = document.getElementById('searchSource');
+        const destSelect = document.getElementById('searchDestination');
+        
+        const sources = [...new Set(routes.map(r => r.source))].sort();
+        const destinations = [...new Set(routes.map(r => r.destination))].sort();
+        
+        sources.forEach(s => sourceSelect.add(new Option(s, s)));
+        destinations.forEach(d => destSelect.add(new Option(d, d)));
+        
+        document.getElementById('findBusesBtn').addEventListener('click', searchSchedules);
+    } catch (e) {
+        showToast('Error loading search data', 'error');
+    }
+}
+
+async function initializeMyBookingsPage() {
+    state.activeTab = 'my-bookings';
+    
+    try {
+        const bookings = await apiFetch(`/bookings/passenger/${currentUser.id}`);
+        const tableBody = document.getElementById('myBookingsTableBody');
+        const emptyMsg = document.getElementById('noBookingsMessage');
+        
+        if (bookings.length === 0) {
+            emptyMsg.style.display = 'block';
+            return;
+        }
+        
+        tableBody.innerHTML = '';
+        bookings.forEach(b => {
+            const tr = document.createElement('tr');
+            tr.className = 'fade-in';
+            tr.innerHTML = `
+                <td style="font-weight: 600;">#BKG-${b.id}</td>
+                <td>
+                    <div style="font-weight: 600;">${b.schedule.route.source} → ${b.schedule.route.destination}</div>
+                    <div style="font-size: 12px; color: #666;">${b.schedule.bus.busNumber}</div>
+                </td>
+                <td>${new Date(b.schedule.departureTime).toLocaleDateString()}</td>
+                <td>${b.seatNumber}</td>
+                <td style="font-weight: 600;">NPR ${b.totalAmount}</td>
+                <td><span class="status-badge status-${b.bookingStatus.toLowerCase()}">${b.bookingStatus}</span></td>
+                <td>
+                    ${b.bookingStatus === 'CONFIRMED' ? `<button class="btn-cancel" onclick="cancelMyBooking(${b.id})">Cancel</button>` : '-'}
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    } catch (e) {
+        showToast('Error loading booking history', 'error');
+    }
+}
+
+async function searchSchedules() {
+    const source = document.getElementById('searchSource').value;
+    const dest = document.getElementById('searchDestination').value;
+    
+    if (!source || !dest) {
+        showToast('Please select source and destination', 'warning');
+        return;
+    }
+    
+    try {
+        const schedules = await apiFetch('/schedules');
+        const filtered = schedules.filter(s => s.route.source === source && s.route.destination === dest);
+        
+        const container = document.getElementById('searchResults');
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="text-align: center; padding: 50px; color: #666;">No buses found for this route. Try another one!</div>`;
+            return;
+        }
+        
+        container.innerHTML = '';
+        filtered.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'schedule-card fade-in';
+            card.innerHTML = `
+                <div class="trip-point">
+                    <h3>${new Date(s.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</h3>
+                    <p>${s.route.source}</p>
+                </div>
+                <div class="trip-duration">
+                    <span>${s.route.estimatedTravelTime} mins</span>
+                    <div class="trip-line"></div>
+                    <span class="seats-info">${s.bus.totalSeats} seats available</span>
+                </div>
+                <div class="trip-point">
+                    <h3>${new Date(new Date(s.departureTime).getTime() + s.route.estimatedTravelTime*60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</h3>
+                    <p>${s.route.destination}</p>
+                </div>
+                <div class="trip-price">
+                    <h2>NPR ${s.route.distance * s.bus.farePerKm}</h2>
+                    <button class="btn btn-primary" onclick="bookNow(${s.id})">Book Now</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        showToast('Search failed', 'error');
+    }
+}
+
+window.bookNow = async (scheduleId) => {
+    // Basic auto-book for now
+    if (confirm('Proceed with booking this seat?')) {
+        try {
+            const bookingData = {
+                passenger: { id: currentUser.id },
+                schedule: { id: scheduleId },
+                bookingDate: new Date().toISOString(),
+                seatNumber: 'A' + Math.floor(Math.random() * 40 + 1),
+                totalAmount: 1000, // Should be calculated
+                bookingStatus: 'CONFIRMED',
+                paymentStatus: 'PAID'
+            };
+            
+            await apiFetch('/bookings', {
+                method: 'POST',
+                body: JSON.stringify(bookingData)
+            });
+            
+            showToast('Ticket booked successfully!', 'success');
+            window.location.href = 'my-bookings.html';
+        } catch (e) {
+            showToast('Booking failed', 'error');
+        }
+    }
+};
+
+window.cancelMyBooking = async (id) => {
+    if (confirm('Are you sure you want to cancel this booking?')) {
+        try {
+            await apiFetch(`/bookings/${id}/cancel`, { method: 'POST' });
+            showToast('Booking cancelled', 'success');
+            initializeMyBookingsPage();
+        } catch (e) {
+            showToast('Cancellation failed', 'error');
+        }
+    }
 }
 
 // Initialize Route Planning Page
@@ -915,6 +1172,165 @@ window.deleteRoute = async (id) => {
             populateRoutes();
         } catch (e) {
             showToast('Error deleting route', 'error');
+        }
+    }
+};
+
+function switchPassengerView(viewType) {
+    const gridContainer = document.getElementById('passengerGridContainer');
+    const tableContainer = document.getElementById('passengerTableContainer');
+    const gridBtn = document.getElementById('passengerViewGridBtn');
+    const tableBtn = document.getElementById('passengerViewTableBtn');
+
+    if (viewType === 'grid') {
+        gridContainer.style.display = 'grid';
+        tableContainer.style.display = 'none';
+        gridBtn.classList.add('btn-primary');
+        gridBtn.classList.remove('btn-outline');
+        tableBtn.classList.add('btn-outline');
+        tableBtn.classList.remove('btn-primary');
+    } else {
+        gridContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        gridBtn.classList.add('btn-outline');
+        gridBtn.classList.remove('btn-primary');
+        tableBtn.classList.add('btn-primary');
+        tableBtn.classList.remove('btn-outline');
+    }
+}
+
+function populatePassengers() {
+    const gridContainer = document.getElementById('passengerGridContainer');
+    const tableBody = document.getElementById('passengerTableBody');
+    if (!gridContainer || !tableBody) return;
+
+    const searchTerm = document.getElementById('passengerSearchInput')?.value.toLowerCase() || '';
+
+    const filteredPassengers = state.passengers.filter(p => {
+        return p.firstName.toLowerCase().includes(searchTerm) || 
+               p.lastName.toLowerCase().includes(searchTerm) ||
+               p.email.toLowerCase().includes(searchTerm) ||
+               p.phoneNumber.includes(searchTerm);
+    });
+
+    // Update stats
+    document.getElementById('mgmtTotalPassengers').textContent = state.passengers.length;
+
+    // Render Grid
+    gridContainer.innerHTML = '';
+    filteredPassengers.forEach(p => {
+        gridContainer.appendChild(renderPassengerCard(p));
+    });
+
+    // Render Table
+    tableBody.innerHTML = '';
+    filteredPassengers.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-weight: 700; padding: 15px;">${p.firstName} ${p.lastName}</td>
+            <td>${p.email}</td>
+            <td>${p.phoneNumber}</td>
+            <td>${new Date(p.registrationDate).toLocaleDateString()}</td>
+            <td>
+                <div class="d-flex gap-10">
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="editPassenger('${p.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="deletePassenger('${p.id}')" style="color: var(--danger);"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function renderPassengerCard(p) {
+    const card = document.createElement('div');
+    card.className = 'passenger-card fade-in';
+    const initals = (p.firstName[0] + p.lastName[0]).toUpperCase();
+    card.innerHTML = `
+        <div class="passenger-header">
+            <div class="passenger-avatar">${initals}</div>
+            <div class="d-flex gap-5">
+                <button class="btn btn-sm btn-icon btn-outline" style="padding: 4px; min-width: 30px;" onclick="editPassenger('${p.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-icon btn-outline" style="padding: 4px; min-width: 30px; color: var(--danger);" onclick="deletePassenger('${p.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        
+        <div class="passenger-info-text">
+            <h3>${p.firstName} ${p.lastName}</h3>
+            <p>Passenger ID: #PASS-${p.id}</p>
+        </div>
+
+        <div class="contact-details">
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <span>${p.email}</span>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <span>${p.phoneNumber}</span>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>${p.address || 'No address provided'}</span>
+            </div>
+        </div>
+
+        <div class="registration-date">
+            <i class="fas fa-calendar-alt"></i>
+            Registered on ${new Date(p.registrationDate).toLocaleDateString()}
+        </div>
+    `;
+    return card;
+}
+
+async function saveNewPassenger() {
+    const form = document.getElementById('addPassengerForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const passengerData = {
+        firstName: document.getElementById('passFirstName').value,
+        lastName: document.getElementById('passLastName').value,
+        email: document.getElementById('passEmail').value,
+        phoneNumber: document.getElementById('passPhone').value,
+        address: document.getElementById('passAddress').value
+    };
+    
+    try {
+        await apiFetch('/passengers', {
+            method: 'POST',
+            body: JSON.stringify(passengerData)
+        });
+        
+        showToast('Passenger profile created successfully!', 'success');
+        closeAllModals();
+        form.reset();
+        
+        // Refresh passengers
+        const passengers = await apiFetch('/passengers');
+        state.passengers = passengers;
+        populatePassengers();
+        
+    } catch (e) {
+        console.error('Save failed:', e);
+        showToast('Error registering passenger', 'error');
+    }
+}
+
+// Placeholder for edit/delete
+window.editPassenger = (id) => showToast('Edit functionality coming soon', 'info');
+window.deletePassenger = async (id) => {
+    if (confirm('Are you sure you want to delete this passenger profile?')) {
+        try {
+            await apiFetch(`/passengers/${id}`, { method: 'DELETE' });
+            showToast('Passenger deleted successfully', 'success');
+            const passengers = await apiFetch('/passengers');
+            state.passengers = passengers;
+            populatePassengers();
+        } catch (e) {
+            showToast('Error deleting passenger', 'error');
         }
     }
 };

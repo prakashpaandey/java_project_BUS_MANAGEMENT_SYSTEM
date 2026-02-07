@@ -288,23 +288,23 @@
             <div class="alert" id="alertMessage"></div>
 
             <div class="auth-header">
-                <div class="logo"><i class="fas fa-bus"></i><span>BusWise</span></div>
-                <h1>Fleet Manager Access</h1>
-                <p>Setup your administrative account</p>
+                <div class="logo"><i class="fas fa-bus"></i><span>TransitVision</span></div>
+                <h1>Create Your Account</h1>
+                <p>Join TransitVision as a passenger</p>
             </div>
 
             <form id="register-form">
                 <div class="input-group">
                     <label>Full Name</label>
-                    <input type="text" id="fullName" required placeholder="Prakash Pandey">
+                    <input type="text" id="fullName" required placeholder="John Doe">
                 </div>
                 <div class="input-group">
                     <label>Email Address</label>
-                    <input type="email" id="email" required placeholder="prakash@example.com">
+                    <input type="email" id="email" required placeholder="john@example.com">
                 </div>
                 <div class="input-group">
                     <label>Username</label>
-                    <input type="text" id="reg-username" required placeholder="admin_prakash">
+                    <input type="text" id="reg-username" required placeholder="john_doe">
                 </div>
                 <div class="input-group">
                     <label>Password</label>
@@ -359,7 +359,7 @@
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fullName, email, username, password, role: 'ADMIN' })
+                    body: JSON.stringify({ fullName, email, username, password, role: 'USER' })
                 });
 
                 const data = await response.json();

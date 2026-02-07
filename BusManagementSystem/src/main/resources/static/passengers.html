@@ -4,14 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route Planning | TransitVision Pro</title>
+    <title>Passenger Management | TransitVision Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@800;900&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -35,7 +34,6 @@
             --gray-light: #e9ecef;
             --gray-dark: #495057;
             --sidebar-width: 250px;
-            --sidebar-collapsed: 70px;
             --header-height: 70px;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             --shadow-lg: 0 15px 50px rgba(0, 0, 0, 0.12);
@@ -183,21 +181,6 @@
             font-weight: 700;
             font-size: 20px;
             border: 3px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .user-role {
-            font-size: 13px;
-            opacity: 0.9;
         }
 
         /* Sidebar Styles */
@@ -365,114 +348,83 @@
             border: 1px solid rgba(0, 0, 0, 0.03);
         }
 
-        /* Route Card Styles */
-        .route-card {
+        /* Passenger Card Styles */
+        .passenger-card {
             background: white;
             border-radius: var(--radius);
             padding: 25px;
             box-shadow: var(--shadow);
-            border-left: 5px solid var(--primary);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .route-card:hover {
+        .passenger-card:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow-lg);
         }
 
-        .route-path {
+        .passenger-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-            position: relative;
         }
 
-        .route-point {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .point-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--dark);
-        }
-
-        .point-label {
-            font-size: 10px;
-            color: var(--gray);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .path-arrow {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--primary);
-        }
-
-        .path-line {
-            width: 40px;
-            height: 2px;
-            background: var(--primary-light);
-            position: relative;
-        }
-
-        .path-line::after {
-            content: '\f105';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            right: -5px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .route-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--gray-light);
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .detail-icon {
-            width: 32px;
-            height: 32px;
+        .passenger-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             background: var(--primary-light);
             color: var(--primary);
-            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 18px;
         }
 
-        .detail-text {
+        .passenger-info-text h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .passenger-info-text p {
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .contact-details {
             display: flex;
             flex-direction: column;
+            gap: 8px;
+            padding: 15px 0;
+            border-top: 1px solid var(--gray-light);
+            border-bottom: 1px solid var(--gray-light);
         }
 
-        .detail-value {
-            font-weight: 600;
-            font-size: 14px;
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--gray-dark);
         }
 
-        .detail-label {
-            font-size: 10px;
+        .contact-item i {
+            color: var(--primary);
+            width: 16px;
+        }
+
+        .registration-date {
+            font-size: 11px;
             color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         /* Form Controls */
@@ -541,7 +493,7 @@
             <div class="header-actions">
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search routes, stations...">
+                    <input type="text" placeholder="Search passengers, emails...">
                 </div>
                 <div class="notification-bell">
                     <i class="fas fa-bell"></i>
@@ -575,7 +527,7 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="routes.html" class="sidebar-link active">
+                    <a href="routes.html" class="sidebar-link">
                         <i class="fas fa-route"></i>
                         <span>Route Planning</span>
                     </a>
@@ -585,7 +537,7 @@
                 <li class="sidebar-item"><a href="#" class="sidebar-link"><i
                             class="fas fa-ticket-alt"></i><span>Ticketing</span></a></li>
                 <li class="sidebar-item">
-                    <a href="passengers.html" class="sidebar-link">
+                    <a href="passengers.html" class="sidebar-link active">
                         <i class="fas fa-user-friends"></i>
                         <span>Passenger Management</span>
                     </a>
@@ -607,87 +559,89 @@
         <main class="content-area">
             <div class="dashboard-header">
                 <div>
-                    <h1 class="dashboard-title">Route <span>Planning</span></h1>
-                    <p>Design and optimize your transit network routes</p>
+                    <h1 class="dashboard-title">Passenger <span>Management</span></h1>
+                    <p>Manage passenger profiles and registration data</p>
                 </div>
                 <div class="dashboard-actions">
-                    <button class="btn btn-primary" id="addRouteBtn">
-                        <i class="fas fa-plus"></i> Design New Route
+                    <button class="btn btn-primary" id="addPassengerBtn">
+                        <i class="fas fa-plus"></i> New Registration
                     </button>
                 </div>
             </div>
 
-            <!-- Route Stats -->
+            <!-- Passenger Stats -->
             <div class="grid-4 gap-20 mb-30">
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: var(--secondary);">
-                        <i class="fas fa-route"></i>
+                    <div class="stat-icon" style="background: var(--primary);">
+                        <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-info">
-                        <h4 id="mgmtTotalRoutes">0</h4>
-                        <p>Active Routes</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: var(--info);">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h4 id="mgmtTotalStations">24</h4>
-                        <p>Key Stations</p>
+                        <h4 id="mgmtTotalPassengers">0</h4>
+                        <p>Total Passengers</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: var(--success);">
-                        <i class="fas fa-road"></i>
+                        <i class="fas fa-user-plus"></i>
                     </div>
                     <div class="stat-info">
-                        <h4 id="mgmtTotalDistance">1,450 km</h4>
-                        <p>Total Network</p>
+                        <h4>24</h4>
+                        <p>New This Week</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--info);">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>98%</h4>
+                        <p>Verified Profiles</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background: var(--accent);">
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-star"></i>
                     </div>
                     <div class="stat-info">
-                        <h4>Optimal</h4>
-                        <p>Network Health</p>
+                        <h4>4.9</h4>
+                        <p>Avg Rating</p>
                     </div>
                 </div>
             </div>
 
+            <!-- Controls -->
             <div class="table-card mb-30">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
-                    <input type="text" id="routeSearchInput" class="form-control" style="width: 350px;"
-                        placeholder="Search by source or destination...">
+                    <input type="text" id="passengerSearchInput" class="form-control" style="width: 350px;"
+                        placeholder="Search by name, email or phone...">
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" id="routeViewGridBtn"><i class="fas fa-th-large"></i></button>
-                        <button class="btn btn-outline" id="routeViewTableBtn"><i class="fas fa-list"></i></button>
+                        <button class="btn btn-primary" id="passengerViewGridBtn"><i
+                                class="fas fa-th-large"></i></button>
+                        <button class="btn btn-outline" id="passengerViewTableBtn"><i class="fas fa-list"></i></button>
                     </div>
                 </div>
             </div>
 
             <!-- Grid Container -->
-            <div id="routeGridContainer" class="stats-cards"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px;">
+            <div id="passengerGridContainer"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;">
                 <!-- Populated by JS -->
             </div>
 
             <!-- Table Container -->
-            <div id="routeTableContainer" style="display: none;">
+            <div id="passengerTableContainer" style="display: none;">
                 <div class="table-card">
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="text-align: left; border-bottom: 2px solid var(--gray-light);">
-                                <th style="padding: 15px;">Source</th>
-                                <th>Destination</th>
-                                <th>Distance</th>
-                                <th>Travel Time</th>
+                                <th style="padding: 15px;">Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Reg. Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="routeTableBody"></tbody>
+                        <tbody id="passengerTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -695,37 +649,35 @@
     </div>
 
     <!-- Modals -->
-    <div class="modal-overlay" id="addRouteModal">
+    <div class="modal-overlay" id="addPassengerModal">
         <div class="modal">
-            <h3>Design New Route</h3>
-            <form id="addRouteForm" style="margin-top: 20px;">
-                <div class="mb-30">
-                    <label>Source Station</label>
-                    <input type="text" id="routeSource" class="form-control" required
-                        placeholder="e.g., Kathmandu Mall">
-                </div>
-                <div class="mb-30">
-                    <label>Destination Station</label>
-                    <input type="text" id="routeDestination" class="form-control" required
-                        placeholder="e.g., Pokhara City Center">
-                </div>
+            <h3>New Passenger Registration</h3>
+            <form id="addPassengerForm" style="margin-top: 20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" class="mb-30">
                     <div>
-                        <label>Distance (km)</label>
-                        <input type="number" id="routeDistance" class="form-control" required placeholder="0.0">
+                        <label>First Name</label>
+                        <input type="text" id="passFirstName" class="form-control" required placeholder="John">
                     </div>
                     <div>
-                        <label>Est. Travel Time (min)</label>
-                        <input type="number" id="routeTime" class="form-control" required placeholder="0">
+                        <label>Last Name</label>
+                        <input type="text" id="passLastName" class="form-control" required placeholder="Doe">
                     </div>
                 </div>
                 <div class="mb-30">
-                    <label>Route Description</label>
-                    <textarea id="routeDescription" class="form-control" style="height: 80px;"></textarea>
+                    <label>Email Address</label>
+                    <input type="email" id="passEmail" class="form-control" required placeholder="john.doe@example.com">
+                </div>
+                <div class="mb-30">
+                    <label>Phone Number</label>
+                    <input type="tel" id="passPhone" class="form-control" required placeholder="+977 98XXXXXXXX">
+                </div>
+                <div class="mb-30">
+                    <label>Address</label>
+                    <input type="text" id="passAddress" class="form-control" placeholder="123 Street Name, City">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" id="cancelRouteModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveRouteBtn">Save Route</button>
+                    <button type="button" class="btn btn-secondary" id="cancelPassengerModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="savePassengerBtn">Register Passenger</button>
                 </div>
             </form>
         </div>

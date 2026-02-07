@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Ticket | TransitVision</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --primary-light: #eef2ff;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #06d6a0;
+            --dark: #1a1a2e;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f8faff;
+            color: var(--dark);
+        }
+
+        .header {
+            background: white;
+            height: var(--header-height);
+            box-shadow: var(--shadow);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--dark);
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        .main-container {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 30px 15px;
+            position: fixed;
+            top: var(--header-height);
+            bottom: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 35px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 35px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .form-control {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .schedule-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto;
+            align-items: center;
+            gap: 30px;
+            transition: var(--transition);
+        }
+
+        .schedule-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .trip-point h3 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .trip-point p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .trip-duration {
+            text-align: center;
+            color: #999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trip-line {
+            height: 2px;
+            width: 100px;
+            background: #eee;
+            position: relative;
+        }
+
+        .trip-line::before,
+        .trip-line::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            position: absolute;
+            top: -3px;
+        }
+
+        .trip-line::before {
+            left: 0;
+        }
+
+        .trip-line::after {
+            right: 0;
+            background: var(--primary);
+        }
+
+        .trip-price {
+            text-align: right;
+        }
+
+        .trip-price h2 {
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        .trip-price p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .seats-info {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--success);
+        }
+
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <a href="passenger-dashboard.html" class="logo">
+            <div class="logo-icon"><i class="fas fa-bus"></i></div>
+            <div class="logo-text">Transit<span>Vision</span></div>
+        </a>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <a href="passenger-dashboard.html" class="nav-link"><i
+                        class="fas fa-home"></i><span>Dashboard</span></a>
+                <a href="book-ticket.html" class="nav-link active"><i class="fas fa-ticket-alt"></i><span>Book
+                        Ticket</span></a>
+                <a href="my-bookings.html" class="nav-link"><i class="fas fa-history"></i><span>My Bookings</span></a>
+                <a href="#" class="nav-link" id="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <h1 style="margin-bottom: 30px;">Find Your Next Journey</h1>
+
+            <div class="search-box">
+                <div class="input-group">
+                    <label>From</label>
+                    <select id="searchSource" class="form-control">
+                        <option value="">Select Origin</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>To</label>
+                    <select id="searchDestination" class="form-control">
+                        <option value="">Select Destination</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Travel Date</label>
+                    <input type="date" id="searchDate" class="form-control">
+                </div>
+                <button class="btn btn-primary" id="findBusesBtn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+
+            <div id="searchResults">
+                <!-- Data populated by JS -->
+                <div style="text-align: center; padding: 100px; color: #999;">
+                    <i class="fas fa-bus-alt" style="font-size: 50px; margin-bottom: 20px; opacity: 0.3;"></i>
+                    <h3>Where are you traveling to?</h3>
+                    <p>Enter your source and destination to find available buses.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toastContainer"></div>
+    <script src="app.js"></script>
+</body>
+
+</html>

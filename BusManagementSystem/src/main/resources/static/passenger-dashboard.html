@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard | TransitVision Passenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --primary-light: #eef2ff;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --danger: #ef476f;
+            --dark: #1a1a2e;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f8faff;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: white;
+            height: var(--header-height);
+            box-shadow: var(--shadow);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--dark);
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 15px;
+            background: var(--primary-light);
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .main-container {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 30px 15px;
+            position: fixed;
+            top: var(--header-height);
+            bottom: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 35px;
+        }
+
+        .welcome-hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #2d3436 100%);
+            border-radius: var(--radius);
+            padding: 40px;
+            color: white;
+            margin-bottom: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-hero::after {
+            content: '\f207';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 200px;
+            opacity: 0.05;
+            transform: rotate(-15deg);
+        }
+
+        .welcome-hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .welcome-hero p {
+            opacity: 0.8;
+            font-size: 16px;
+            max-width: 500px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--primary);
+        }
+
+        .trip-info h4 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .trip-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-confirmed {
+            background: #e6fffa;
+            color: #38b2ac;
+        }
+
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <a href="passenger-dashboard.html" class="logo">
+            <div class="logo-icon"><i class="fas fa-bus"></i></div>
+            <div class="logo-text">Transit<span>Vision</span></div>
+        </a>
+
+        <div class="header-actions">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatarText">JD</div>
+                <div class="user-info">
+                    <span style="font-weight: 600; font-size: 14px;" id="userName">John Doe</span>
+                </div>
+            </div>
+            <button class="btn btn-icon" id="logout-btn"
+                style="background: none; color: var(--danger); font-size: 20px;">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="passenger-dashboard.html" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="book-ticket.html" class="nav-link">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Book Ticket</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="my-bookings.html" class="nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>My Bookings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <div class="welcome-hero">
+                <h1>Hello, <span id="welcomeName">Passenger</span>!</h1>
+                <p>Welcome back to TransitVision. Where are we heading today? Your next journey is just a few clicks
+                    away.</p>
+                <div style="margin-top: 25px;">
+                    <a href="book-ticket.html" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Find a Bus
+                    </a>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--primary);">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div>
+                        <h3 id="statTotalTrips">0</h3>
+                        <p style="color: #666; font-size: 14px;">Total Trips</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--success);">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h3 id="statSpent">NPR 0</h3>
+                        <p style="color: #666; font-size: 14px;">Total Spent</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: var(--accent);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <h3 id="statLoyalty">Silver</h3>
+                        <p style="color: #666; font-size: 14px;">Member Status</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title">Upcoming Journey</h2>
+                <a href="my-bookings.html"
+                    style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 14px;">View
+                    All</a>
+            </div>
+
+            <div id="upcomingBookings">
+                <!-- Data populated by JS -->
+                <div class="booking-card"
+                    style="justify-content: center; padding: 40px; border: 2px dashed #ddd; border-left: 2px dashed #ddd; background: transparent;">
+                    <div style="text-align: center; color: #999;">
+                        <i class="fas fa-calendar-times" style="font-size: 40px; margin-bottom: 15px;"></i>
+                        <p>No upcoming trips found. Time to plan one!</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
