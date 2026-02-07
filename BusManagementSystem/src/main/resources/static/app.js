@@ -62,6 +62,7 @@ async function initializeDashboard() {
     if (currentUser) {
         document.getElementById('userName').textContent = currentUser.fullName;
         document.getElementById('userAvatarText').textContent = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('userRole').textContent = currentUser.role === 'ADMIN' ? 'System Administrator' : 'Portal User';
     }
 
     // Apply saved preferences

@@ -67,6 +67,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Admin admin) {
         try {
+            admin.setRole("USER");
             Admin createdAdmin = adminService.createAdmin(admin);
             return ResponseEntity.ok(Map.of(
                 "message", "Admin registered successfully",
