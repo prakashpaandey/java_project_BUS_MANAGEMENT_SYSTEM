@@ -798,6 +798,28 @@
             color: var(--primary);
         }
 
+        /* View Management */
+        .content-view {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .content-view.active-view {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .btn-outline:hover {
             background: var(--primary);
             color: white;
@@ -1937,13 +1959,13 @@
             <ul class="sidebar-menu">
                 <li class="sidebar-section-title">Main</li>
                 <li class="sidebar-item">
-                    <a href="#" class="sidebar-link active">
+                    <a href="index.html" class="sidebar-link active">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="#" class="sidebar-link">
+                    <a href="buses.html" class="sidebar-link">
                         <i class="fas fa-bus-alt"></i>
                         <span>Bus Management</span>
                         <span class="badge">3</span>
@@ -2029,312 +2051,317 @@
 
         <!-- Content Area -->
         <main class="content-area">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <div>
-                    <h1 class="dashboard-title">Bus Management <span>Dashboard</span></h1>
-                    <p class="chart-subtitle">Real-time monitoring and analytics for your transit fleet</p>
-                </div>
-                <div class="dashboard-actions">
-                    <div class="date-time-widget" id="dateTime">
-                        <i class="far fa-clock"></i>
-                        <div class="date-time-info">
-                            <div class="current-time" id="currentTime">12:45:30</div>
-                            <div class="current-date" id="currentDate">Friday, October 27, 2023</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary btn-rounded" id="quickReportBtn">
-                        <i class="fas fa-download"></i> Export Report
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="stats-cards">
-                <div class="stat-card bus fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-bus"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="totalBuses">48</h3>
-                        <p>Total Buses</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i> +2 this month
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card route fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-route"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="totalRoutes">22</h3>
-                        <p>Active Routes</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i> +1 this month
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card passenger fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="totalPassengers">2,847</h3>
-                        <p>Daily Passengers</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i> +8.5% this week
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card revenue fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="dailyRevenue">$8,950</h3>
-                        <p>Daily Revenue</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-up"></i> +12.3% this week
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card efficiency fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="fleetEfficiency">94.2%</h3>
-                        <p>Fleet Efficiency</p>
-                        <div class="stat-change negative">
-                            <i class="fas fa-arrow-down"></i> -1.2% today
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stat-card incidents fade-in">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="activeIncidents">3</h3>
-                        <p>Active Incidents</p>
-                        <div class="stat-change positive">
-                            <i class="fas fa-arrow-down"></i> -2 this week
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="charts-container">
-                <div class="chart-card fade-in">
-                    <div class="chart-header">
-                        <div>
-                            <h3 class="chart-title">Passenger Traffic Analysis</h3>
-                            <p class="chart-subtitle">Real-time passenger volume across routes</p>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="chart-btn active" data-period="day">Today</button>
-                            <button class="chart-btn" data-period="week">This Week</button>
-                            <button class="chart-btn" data-period="month">This Month</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="passengerChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-card fade-in">
-                    <div class="chart-header">
-                        <div>
-                            <h3 class="chart-title">Revenue & Performance</h3>
-                            <p class="chart-subtitle">Revenue trends and operational efficiency</p>
-                        </div>
-                        <div class="chart-actions">
-                            <button class="chart-btn active" data-period="day">Today</button>
-                            <button class="chart-btn" data-period="week">This Week</button>
-                            <button class="chart-btn" data-period="month">This Month</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Live Bus Tracking -->
-            <div class="table-card fade-in">
-                <div class="table-header">
+            <!-- Dashboard Content -->
+            <div id="dashboard-content">
+                <!-- Dashboard Header -->
+                <div class="dashboard-header">
                     <div>
-                        <h3 class="table-title">Live Bus Tracking</h3>
-                        <p class="table-subtitle">Real-time location and status of all active buses</p>
+                        <h1 class="dashboard-title">Bus Management <span>Dashboard</span></h1>
+                        <p class="chart-subtitle">Real-time monitoring and analytics for your transit fleet</p>
                     </div>
-                    <div class="table-actions">
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-filter"></i> Filter Buses
-                        </button>
-                        <button class="btn btn-primary" id="refreshTrackingBtn">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="live-tracking-container">
-                    <div class="live-tracking-map">
-                        <div class="map-placeholder">
-                            <i class="fas fa-map-marked-alt pulse"></i>
-                            <h3>Live Bus Tracking Map</h3>
-                            <p>Interactive map showing real-time bus locations with live updates</p>
-                            <div class="spinner mt-20"></div>
-                        </div>
-                    </div>
-                    <div class="tracking-sidebar">
-                        <div class="tracking-card">
-                            <h4>Active Buses</h4>
-                            <div class="tracking-list" id="activeBusesList">
-                                <!-- Active buses will be populated by JavaScript -->
+                    <div class="dashboard-actions">
+                        <div class="date-time-widget" id="dateTime">
+                            <i class="far fa-clock"></i>
+                            <div class="date-time-info">
+                                <div class="current-time" id="currentTime">12:45:30</div>
+                                <div class="current-date" id="currentDate">Friday, October 27, 2023</div>
                             </div>
                         </div>
-                        <div class="tracking-card">
-                            <h4>Bus Status Summary</h4>
-                            <div class="bus-info-grid">
-                                <div class="bus-info-item">
-                                    <div class="bus-info-value" id="onRouteCount">18</div>
-                                    <div class="bus-info-label">On Route</div>
-                                </div>
-                                <div class="bus-info-item">
-                                    <div class="bus-info-value" id="atStationCount">12</div>
-                                    <div class="bus-info-label">At Station</div>
-                                </div>
-                                <div class="bus-info-item">
-                                    <div class="bus-info-value" id="delayedCount">3</div>
-                                    <div class="bus-info-label">Delayed</div>
-                                </div>
-                                <div class="bus-info-item">
-                                    <div class="bus-info-value" id="offlineCount">2</div>
-                                    <div class="bus-info-label">Offline</div>
-                                </div>
+                        <button class="btn btn-primary btn-rounded" id="quickReportBtn">
+                            <i class="fas fa-download"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-cards">
+                    <!-- ... stats cards content ... -->
+                    <div class="stat-card bus fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-bus"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalBuses">48</h3>
+                            <p>Total Buses</p>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> +2 this month
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card route fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalRoutes">22</h3>
+                            <p>Active Routes</p>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> +1 this month
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card passenger fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalPassengers">2,847</h3>
+                            <p>Daily Passengers</p>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> +8.5% this week
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card revenue fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="dailyRevenue">$8,950</h3>
+                            <p>Daily Revenue</p>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> +12.3% this week
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card efficiency fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="fleetEfficiency">94.2%</h3>
+                            <p>Fleet Efficiency</p>
+                            <div class="stat-change negative">
+                                <i class="fas fa-arrow-down"></i> -1.2% today
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card incidents fade-in">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="activeIncidents">3</h3>
+                            <p>Active Incidents</p>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-down"></i> -2 this week
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Bus Fleet Overview -->
-            <div class="table-card fade-in">
-                <div class="table-header">
-                    <div>
-                        <h3 class="table-title">Bus Fleet Overview</h3>
-                        <p class="table-subtitle">Complete fleet management and monitoring</p>
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <div class="chart-card fade-in">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Passenger Traffic Analysis</h3>
+                                <p class="chart-subtitle">Real-time passenger volume across routes</p>
+                            </div>
+                            <div class="chart-actions">
+                                <button class="chart-btn active" data-period="day">Today</button>
+                                <button class="chart-btn" data-period="week">This Week</button>
+                                <button class="chart-btn" data-period="month">This Month</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="passengerChart"></canvas>
+                        </div>
                     </div>
-                    <div class="table-actions">
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <button class="btn btn-primary" id="addBusBtn">
-                            <i class="fas fa-plus"></i> Add New Bus
-                        </button>
-                        <button class="btn btn-outline">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Bus ID</th>
-                                <th>Type</th>
-                                <th>Capacity</th>
-                                <th>Current Route</th>
-                                <th>Driver</th>
-                                <th>Status</th>
-                                <th>Efficiency</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="busTableBody">
-                            <!-- Bus data will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="form-actions">
-                    <button class="btn btn-secondary">View All Buses</button>
-                    <button class="btn btn-primary">Generate Fleet Report</button>
-                </div>
-            </div>
 
-            <!-- Recent Activities & Alerts -->
-            <div class="charts-container">
-                <div class="chart-card fade-in">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Recent Activities</h3>
-                        <button class="btn btn-sm btn-secondary">View All</button>
+                    <div class="chart-card fade-in">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Revenue & Performance</h3>
+                                <p class="chart-subtitle">Revenue trends and operational efficiency</p>
+                            </div>
+                            <div class="chart-actions">
+                                <button class="chart-btn active" data-period="day">Today</button>
+                                <button class="chart-btn" data-period="week">This Week</button>
+                                <button class="chart-btn" data-period="month">This Month</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Bus Tracking -->
+                <div class="table-card fade-in">
+                    <div class="table-header">
+                        <div>
+                            <h3 class="table-title">Live Bus Tracking</h3>
+                            <p class="table-subtitle">Real-time location and status of all active buses</p>
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-filter"></i> Filter Buses
+                            </button>
+                            <button class="btn btn-primary" id="refreshTrackingBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="live-tracking-container">
+                        <div class="live-tracking-map">
+                            <div class="map-placeholder">
+                                <i class="fas fa-map-marked-alt pulse"></i>
+                                <h3>Live Bus Tracking Map</h3>
+                                <p>Interactive map showing real-time bus locations with live updates</p>
+                                <div class="spinner mt-20"></div>
+                            </div>
+                        </div>
+                        <div class="tracking-sidebar">
+                            <div class="tracking-card">
+                                <h4>Active Buses</h4>
+                                <div class="tracking-list" id="activeBusesList">
+                                    <!-- Active buses will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="tracking-card">
+                                <h4>Bus Status Summary</h4>
+                                <div class="bus-info-grid">
+                                    <div class="bus-info-item">
+                                        <div class="bus-info-value" id="onRouteCount">18</div>
+                                        <div class="bus-info-label">On Route</div>
+                                    </div>
+                                    <div class="bus-info-item">
+                                        <div class="bus-info-value" id="atStationCount">12</div>
+                                        <div class="bus-info-label">At Station</div>
+                                    </div>
+                                    <div class="bus-info-item">
+                                        <div class="bus-info-value" id="delayedCount">3</div>
+                                        <div class="bus-info-label">Delayed</div>
+                                    </div>
+                                    <div class="bus-info-item">
+                                        <div class="bus-info-value" id="offlineCount">2</div>
+                                        <div class="bus-info-label">Offline</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bus Fleet Overview -->
+                <div class="table-card fade-in">
+                    <div class="table-header">
+                        <div>
+                            <h3 class="table-title">Bus Fleet Overview</h3>
+                            <p class="table-subtitle">Complete fleet management and monitoring</p>
+                        </div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <button class="btn btn-primary" id="addBusBtn">
+                                <i class="fas fa-plus"></i> Add New Bus
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>Time</th>
-                                    <th>Activity</th>
                                     <th>Bus ID</th>
-                                    <th>Details</th>
+                                    <th>Type</th>
+                                    <th>Capacity</th>
+                                    <th>Current Route</th>
+                                    <th>Driver</th>
+                                    <th>Status</th>
+                                    <th>Efficiency</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="activityTableBody">
-                                <!-- Activities will be populated by JavaScript -->
+                            <tbody id="busTableBody">
+                                <!-- Bus data will be populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <div class="chart-card fade-in">
-                    <div class="chart-header">
-                        <h3 class="chart-title">System Alerts</h3>
-                        <button class="btn btn-sm btn-secondary">Clear All</button>
-                    </div>
-                    <div id="systemAlertsList">
-                        <!-- Alerts will be populated by JavaScript -->
+                    <div class="form-actions">
+                        <button class="btn btn-secondary">View All Buses</button>
+                        <button class="btn btn-primary">Generate Fleet Report</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Quick Actions -->
-            <div class="table-card fade-in">
-                <div class="table-header">
-                    <h3 class="table-title">Quick Actions</h3>
-                    <p class="table-subtitle">Frequently used actions for quick access</p>
+                <!-- Recent Activities & Alerts -->
+                <div class="charts-container">
+                    <div class="chart-card fade-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Recent Activities</h3>
+                            <button class="btn btn-sm btn-secondary">View All</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Activity</th>
+                                        <th>Bus ID</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activityTableBody">
+                                    <!-- Activities will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="chart-card fade-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">System Alerts</h3>
+                            <button class="btn btn-sm btn-secondary">Clear All</button>
+                        </div>
+                        <div id="systemAlertsList">
+                            <!-- Alerts will be populated by JavaScript -->
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex gap-20" style="flex-wrap: wrap;">
-                    <button class="btn btn-primary btn-icon">
-                        <i class="fas fa-route"></i>
-                    </button>
-                    <button class="btn btn-success btn-icon">
-                        <i class="fas fa-calendar-plus"></i>
-                    </button>
-                    <button class="btn btn-warning btn-icon">
-                        <i class="fas fa-wrench"></i>
-                    </button>
-                    <button class="btn btn-danger btn-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </button>
-                    <button class="btn btn-secondary btn-icon">
-                        <i class="fas fa-chart-pie"></i>
-                    </button>
-                    <button class="btn btn-primary btn-icon">
-                        <i class="fas fa-user-plus"></i>
-                    </button>
-                    <button class="btn btn-success btn-icon">
-                        <i class="fas fa-file-export"></i>
-                    </button>
-                    <button class="btn btn-warning btn-icon">
-                        <i class="fas fa-cog"></i>
-                    </button>
+
+                <!-- Quick Actions -->
+                <div class="table-card fade-in">
+                    <div class="table-header">
+                        <h3 class="table-title">Quick Actions</h3>
+                        <p class="table-subtitle">Frequently used actions for quick access</p>
+                    </div>
+                    <div class="d-flex gap-20" style="flex-wrap: wrap;">
+                        <button class="btn btn-primary btn-icon">
+                            <i class="fas fa-route"></i>
+                        </button>
+                        <button class="btn btn-success btn-icon">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="btn btn-warning btn-icon">
+                            <i class="fas fa-wrench"></i>
+                        </button>
+                        <button class="btn btn-danger btn-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </button>
+                        <button class="btn btn-primary btn-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                        <button class="btn btn-success btn-icon">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                        <button class="btn btn-warning btn-icon">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </main>
     </div>

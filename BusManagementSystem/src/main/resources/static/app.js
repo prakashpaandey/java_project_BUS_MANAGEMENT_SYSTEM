@@ -17,7 +17,8 @@ const state = {
     darkMode: false,
     sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
     liveTrackingInterval: null,
-    realTimeDataInterval: null
+    realTimeDataInterval: null,
+    currentPage: window.location.pathname.split('/').pop() || 'index.html'
 };
 
 // Auth State Management
@@ -36,7 +37,12 @@ async function initApp() {
             const data = await response.json();
             if (data.valid) {
                 currentUser = data.admin;
-                initializeDashboard();
+                initializeCommonUI();
+                if (state.currentPage === 'index.html' || state.currentPage === '') {
+                    initializeDashboard();
+                } else if (state.currentPage === 'buses.html') {
+                    initializeBusManagementPage();
+                }
             } else {
                 handleUnauthenticated();
             }
@@ -51,25 +57,32 @@ async function initApp() {
 
 function handleUnauthenticated() {
     localStorage.removeItem('token');
-    if (window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/')) {
+    const path = window.location.pathname;
+    if (path.includes('index.html') || path.includes('buses.html') || path.endsWith('/')) {
         window.location.href = 'login.html';
     }
 }
 
-// Initialize the dashboard
-async function initializeDashboard() {
-    // Set user info
+// Initialize Common UI (Header, Sidebar)
+function initializeCommonUI() {
     if (currentUser) {
-        document.getElementById('userName').textContent = currentUser.fullName;
-        document.getElementById('userAvatarText').textContent = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
-        document.getElementById('userRole').textContent = currentUser.role === 'ADMIN' ? 'System Administrator' : 'Portal User';
+        const nameEl = document.getElementById('userName');
+        const avatarEl = document.getElementById('userAvatarText');
+        const roleEl = document.getElementById('userRole');
+        
+        if (nameEl) nameEl.textContent = currentUser.fullName;
+        if (avatarEl) avatarEl.textContent = currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+        if (roleEl) roleEl.textContent = currentUser.role === 'ADMIN' ? 'System Administrator' : 'Portal User';
     }
 
-    // Apply saved preferences
     applySavedPreferences();
-    
-    // Initialize UI components
     initializeUI();
+    setupEventListeners();
+}
+
+// Initialize the dashboard
+async function initializeDashboard() {
+    state.activeTab = 'dashboard';
     
     // Load data from API
     await loadDashboardData();
@@ -77,13 +90,25 @@ async function initializeDashboard() {
     // Initialize real-time updates
     initializeRealTimeUpdates();
     
-    // Set up event listeners
-    setupEventListeners();
-    
     // Show welcome message
     setTimeout(() => {
         showToast(`Welcome back, ${currentUser.fullName.split(' ')[0]}`, 'success');
     }, 1000);
+}
+
+// Initialize Bus Management Page
+async function initializeBusManagementPage() {
+    state.activeTab = 'bus-management';
+    
+    // Load data
+    try {
+        const buses = await apiFetch('/buses');
+        state.buses = buses;
+        populateBusManagement();
+    } catch (e) {
+        console.error('Failed to load buses:', e);
+        showToast('Error loading fleet data', 'error');
+    }
 }
 
 async function loadDashboardData() {
@@ -107,7 +132,8 @@ async function loadDashboardData() {
         
         // Map data for display
         updateStats();
-        populateBusTable();
+        populateBusTable(); // Dashboard table
+        populateBusManagement(); // Bus Management view
         updateActiveBusesList();
         
         // Mock some activities and notifications for now
@@ -246,14 +272,37 @@ function setupEventListeners() {
         sidebarToggle.addEventListener('click', toggleSidebar);
     }
     
-    // Navigation
+    // Navigation (Now static links, but keep sidebar persistence)
     document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const view = this.querySelector('span').textContent.toLowerCase().replace(' ', '-');
-            handleNavigation(view, this);
-        });
+        // Just let the links work naturally, sidebar-link logic handled by server-side active classes
+        // but we can ensure sidebar link clicks update our state if needed.
     });
+
+    // Bus Management Controls
+    const busSearchInput = document.getElementById('busSearchInput');
+    if (busSearchInput) {
+        busSearchInput.addEventListener('input', () => populateBusManagement());
+    }
+
+    const busTypeFilter = document.getElementById('busTypeFilter');
+    if (busTypeFilter) {
+        busTypeFilter.addEventListener('change', () => populateBusManagement());
+    }
+
+    const busStatusFilter = document.getElementById('busStatusFilter');
+    if (busStatusFilter) {
+        busStatusFilter.addEventListener('change', () => populateBusManagement());
+    }
+
+    const viewGridBtn = document.getElementById('viewGridBtn');
+    if (viewGridBtn) {
+        viewGridBtn.addEventListener('click', () => switchBusView('grid'));
+    }
+
+    const viewTableBtn = document.getElementById('viewTableBtn');
+    if (viewTableBtn) {
+        viewTableBtn.addEventListener('click', () => switchBusView('table'));
+    }
 
     // Logout
     const logoutBtn = document.getElementById('logout-btn');
@@ -268,6 +317,9 @@ function setupEventListeners() {
     const addBusBtn = document.getElementById('addBusBtn');
     if (addBusBtn) addBusBtn.addEventListener('click', () => openModal('addBusModal'));
     
+    const addBusBtnMain = document.getElementById('addBusBtnMain');
+    if (addBusBtnMain) addBusBtnMain.addEventListener('click', () => openModal('addBusModal'));
+    
     const closeModalBtn = document.getElementById('closeModalBtn');
     if (closeModalBtn) closeModalBtn.addEventListener('click', closeAllModals);
     
@@ -278,15 +330,149 @@ function setupEventListeners() {
     if (saveBusBtn) saveBusBtn.addEventListener('click', saveNewBus);
 }
 
-function handleNavigation(view, linkElement) {
-    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    linkElement.classList.add('active');
-    
-    state.activeTab = view;
-    showToast(`Navigated to ${linkElement.querySelector('span').textContent}`, 'info');
-    
-    // In a real SPA, this would swap content. 
-    // Here we might just filter or update the current view if we stay on one page.
+// handleNavigation removed as we use multi-page anchors now
+
+function switchBusView(viewType) {
+    const gridContainer = document.getElementById('busGridContainer');
+    const tableContainer = document.getElementById('busTableContainer');
+    const gridBtn = document.getElementById('viewGridBtn');
+    const tableBtn = document.getElementById('viewTableBtn');
+
+    if (viewType === 'grid') {
+        gridContainer.style.display = 'grid';
+        tableContainer.style.display = 'none';
+        gridBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+    } else {
+        gridContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        gridBtn.classList.remove('active');
+        tableBtn.classList.add('active');
+    }
+}
+
+function populateBusManagement() {
+    const gridContainer = document.getElementById('busGridContainer');
+    const tableBody = document.getElementById('busManagementTableBody');
+    if (!gridContainer || !tableBody) return;
+
+    const searchTerm = document.getElementById('busSearchInput')?.value.toLowerCase() || '';
+    const typeFilter = document.getElementById('busTypeFilter')?.value || 'all';
+    const statusFilter = document.getElementById('busStatusFilter')?.value || 'all';
+
+    const filteredBuses = state.buses.filter(bus => {
+        const matchesSearch = bus.busNumber.toLowerCase().includes(searchTerm) || 
+                              bus.busType.toLowerCase().includes(searchTerm);
+        const matchesType = typeFilter === 'all' || bus.busType.toLowerCase() === typeFilter;
+        const matchesStatus = statusFilter === 'all' || 
+                             (statusFilter === 'active' ? bus.isAvailable : !bus.isAvailable);
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
+    // Update Stats in Bus Management view
+    document.getElementById('mgmtTotalBuses').textContent = state.buses.length;
+    document.getElementById('mgmtActiveBuses').textContent = state.buses.filter(b => b.isAvailable).length;
+    document.getElementById('mgmtMaintenanceBuses').textContent = state.buses.filter(b => !b.isAvailable).length;
+
+    // Render Grid
+    gridContainer.innerHTML = '';
+    filteredBuses.forEach(bus => {
+        gridContainer.appendChild(renderBusCard(bus));
+    });
+
+    // Render Table
+    tableBody.innerHTML = '';
+    filteredBuses.forEach(bus => {
+        const tr = document.createElement('tr');
+        const statusClass = bus.isAvailable ? 'status-active' : 'status-maintenance';
+        const statusText = bus.isAvailable ? 'Available' : 'Maintenance';
+        
+        tr.innerHTML = `
+            <td style="font-weight: 700;">${bus.busNumber}</td>
+            <td><div class="bus-type">${bus.busType}</div></td>
+            <td>NEP-1029</td>
+            <td>Tata Motors</td>
+            <td>
+                <span class="status-badge ${statusClass}">
+                    <i class="fas fa-circle"></i> ${statusText}
+                </span>
+            </td>
+            <td>
+                <div class="d-flex gap-10">
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="editBus('${bus.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="deleteBus('${bus.id}')" style="color: var(--danger);"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function renderBusCard(bus) {
+    const card = document.createElement('div');
+    card.className = 'stat-card fade-in';
+    card.style.flexDirection = 'column';
+    card.style.alignItems = 'stretch';
+    card.style.padding = '20px';
+    card.style.gap = '15px';
+
+    const statusClass = bus.isAvailable ? 'active' : 'maintenance';
+    const statusText = bus.isAvailable ? 'Active' : 'In Shop';
+    const statusColor = bus.isAvailable ? 'var(--success)' : 'var(--warning)';
+
+    card.innerHTML = `
+        <div class="d-flex justify-between align-start">
+            <div class="d-flex align-center gap-15">
+                <div class="stat-icon" style="width: 50px; height: 50px; background: var(--primary-light); color: var(--primary); border-radius: 12px;">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 18px; margin-bottom: 2px;">${bus.busNumber}</h3>
+                    <div class="bus-type" style="font-size: 11px;">${bus.busType}</div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <span class="status-badge status-${statusClass}" style="margin-bottom: 5px;">
+                    <i class="fas fa-circle"></i> ${statusText}
+                </span>
+                <div style="font-size: 10px; color: var(--gray);">Last Sync: 2m ago</div>
+            </div>
+        </div>
+
+        <div class="bus-stats-mini" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div style="background: var(--gray-light); padding: 10px; border-radius: 8px;">
+                <div style="font-size: 10px; color: var(--gray);">Capacity</div>
+                <div style="font-weight: 600; font-size: 14px;">${bus.totalSeats} Seats</div>
+            </div>
+            <div style="background: var(--gray-light); padding: 10px; border-radius: 8px;">
+                <div style="font-size: 10px; color: var(--gray);">Occupancy</div>
+                <div style="font-weight: 600; font-size: 14px;">75%</div>
+            </div>
+        </div>
+
+        <div class="card-progress" style="margin-top: 5px;">
+            <div class="d-flex justify-between mb-5">
+                <span style="font-size: 11px; color: var(--gray);">Fuel Level</span>
+                <span style="font-size: 11px; font-weight: 600;">82%</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: var(--gray-light); border-radius: 10px; overflow: hidden;">
+                <div style="width: 82%; height: 100%; background: var(--success); border-radius: 10px;"></div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-10 mt-10">
+            <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="viewBusDetails('${bus.id}')">
+                Details
+            </button>
+            <button class="btn btn-outline btn-sm btn-icon" title="Edit" onclick="editBus('${bus.id}')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-outline btn-sm btn-icon" title="View Route" onclick="trackBus('${bus.id}')">
+                <i class="fas fa-route"></i>
+            </button>
+        </div>
+    `;
+    return card;
 }
 
 function toggleSidebar() {
