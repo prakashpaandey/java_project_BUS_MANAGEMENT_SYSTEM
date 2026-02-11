@@ -1,6 +1,6 @@
 const API_BASE = '/api';
 let currentUser = null;
-let currentToken = localStorage.getItem('token');
+let currentToken = null;
 const DateTime = luxon.DateTime;
 
 // Application state
@@ -23,20 +23,34 @@ const state = {
 
 // Auth State Management
 async function initApp() {
+    console.log('🔍 [AUTH DEBUG] initApp started');
+    console.log('🔍 [AUTH DEBUG] Current page:', state.currentPage);
+    
+    // Refresh token from localStorage on every page load
+    currentToken = localStorage.getItem('token');
+    console.log('🔍 [AUTH DEBUG] Token from localStorage:', currentToken ? 'EXISTS (length: ' + currentToken.length + ')' : 'NULL');
+    
     if (currentToken) {
         try {
+            console.log('🔍 [AUTH DEBUG] Sending validation request to:', `${API_BASE}/auth/validate`);
             const response = await fetch(`${API_BASE}/auth/validate`, {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
             
+            console.log('🔍 [AUTH DEBUG] Validation response status:', response.status);
+            
             if (!response.ok) {
+                console.error('❌ [AUTH DEBUG] Token validation failed:', response.status);
                 handleUnauthenticated();
                 return;
             }
 
             const data = await response.json();
+            console.log('🔍 [AUTH DEBUG] Validation response data:', data);
+            
             if (data.valid) {
                 currentUser = data.admin;
+                console.log('✅ [AUTH DEBUG] Token valid! User:', currentUser.username, 'Role:', currentUser.role);
                 initializeCommonUI();
 
                 // Role-based Access Control & Redirection
@@ -44,19 +58,24 @@ async function initApp() {
                 const passengerPages = ['passenger-dashboard.html', 'book-ticket.html', 'my-bookings.html'];
 
                 if (currentUser.role === 'USER') {
+                    console.log('🔍 [AUTH DEBUG] User is PASSENGER, checking page access...');
                     // Redirect passengers away from admin pages
                     if (adminPages.includes(state.currentPage) || state.currentPage === '') {
+                        console.log('⚠️ [AUTH DEBUG] Redirecting passenger from admin page to passenger-dashboard.html');
                         window.location.href = 'passenger-dashboard.html';
-                        return;
+ return;
                     }
                 } else if (currentUser.role === 'ADMIN') {
+                    console.log('🔍 [AUTH DEBUG] User is ADMIN, checking page access...');
                     // Redirect admins away from passenger pages if they land there
                     if (passengerPages.includes(state.currentPage)) {
+                        console.log('⚠️ [AUTH DEBUG] Redirecting admin from passenger page to index.html');
                         window.location.href = 'index.html';
                         return;
                     }
                 }
 
+                console.log('✅ [AUTH DEBUG] User has access to this page, initializing...');
                 // Initialize Page Logic
                 if (state.currentPage === 'index.html' || state.currentPage === '') {
                     initializeDashboard();
@@ -73,26 +92,35 @@ async function initApp() {
                 } else if (state.currentPage === 'my-bookings.html') {
                     initializeMyBookingsPage();
                 }
+                console.log('✅ [AUTH DEBUG] Page initialized successfully');
             } else {
+                console.error('❌ [AUTH DEBUG] Token marked as invalid by server');
                 handleUnauthenticated();
             }
         } catch (e) {
-            console.error('Auth check failed:', e);
+            console.error('❌ [AUTH DEBUG] Auth check failed with error:', e);
             handleUnauthenticated();
         }
     } else {
+        console.error('❌ [AUTH DEBUG] No token found in localStorage');
         handleUnauthenticated();
     }
 }
 
 function handleUnauthenticated() {
+    console.log('🚫 [AUTH DEBUG] handleUnauthenticated called - clearing token and redirecting');
+    console.log('🚫 [AUTH DEBUG] Current page:', state.currentPage);
+    console.log('🚫 [AUTH DEBUG] Current path:', window.location.pathname);
     localStorage.removeItem('token');
     const path = window.location.pathname;
     const adminPages = ['index.html', 'buses.html', 'routes.html', 'passengers.html'];
     const passengerPages = ['passenger-dashboard.html', 'book-ticket.html', 'my-bookings.html'];
     
     if (adminPages.includes(state.currentPage) || passengerPages.includes(state.currentPage) || path.endsWith('/')) {
+        console.log('🚫 [AUTH DEBUG] Redirecting to login.html');
         window.location.href = 'login.html';
+    } else {
+        console.log('🚫 [AUTH DEBUG] Not redirecting - page is:', state.currentPage);
     }
 }
 

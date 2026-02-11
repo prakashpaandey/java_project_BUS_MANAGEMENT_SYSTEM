@@ -760,7 +760,6 @@
             else overlay.classList.remove('active');
         }
 
-        // Real Login Handler connected to backend
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -787,8 +786,13 @@
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
                     showAlert('Login successful! Redirecting...', 'success');
+
+                    // Role-based redirect
+                    const userRole = data.admin?.role || 'USER';
+                    const redirectUrl = userRole === 'ADMIN' ? 'index.html' : 'passenger-dashboard.html';
+
                     setTimeout(() => {
-                        window.location.href = 'index.html';
+                        window.location.href = redirectUrl;
                     }, 1500);
                 } else {
                     showAlert(data.error || 'Invalid username or password', 'error');

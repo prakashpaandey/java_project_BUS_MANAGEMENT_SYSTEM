@@ -289,6 +289,11 @@
             font-size: 18px;
             width: 22px;
             text-align: center;
+            transition: var(--transition);
+        }
+
+        .sidebar-link.active i {
+            transform: scale(1.1);
         }
 
         .sidebar-link .badge {
@@ -299,6 +304,30 @@
             padding: 2px 7px;
             border-radius: 10px;
             font-weight: 600;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 20px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
+            z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
         }
 
         .content-area {
@@ -469,14 +498,17 @@
 </head>
 
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="container header-container">
             <div class="logo">
                 <div class="logo-icon">
-                    <i class="fas fa-bus-alt"></i>
+                    <i class="fas fa-bus"></i>
                 </div>
-                <div class="logo-text">Transit<span>Vision</span> Pro</div>
+                <div class="logo-text">Transit<span>Vision Pro</span></div>
+            </div>
+
+            <div class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
             </div>
 
             <div class="header-actions">
@@ -485,8 +517,8 @@
                     <input type="text" placeholder="Search buses, routes, drivers...">
                 </div>
                 <div class="notification-bell">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">5</span>
+                    <i class="far fa-bell"></i>
+                    <div class="notification-badge">5</div>
                 </div>
                 <div class="user-profile">
                     <div class="user-avatar" id="userAvatarText">AD</div>
@@ -502,7 +534,11 @@
 
     <div class="main-content">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+
             <ul class="sidebar-menu">
                 <li class="sidebar-section-title">Main</li>
                 <li class="sidebar-item">
@@ -542,10 +578,57 @@
                     <a href="#" class="sidebar-link">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Scheduling</span>
+                        <span class="badge">2</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Analytics</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reports & Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Live Tracking</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Maintenance</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-wrench"></i>
+                        <span>Maintenance</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-gas-pump"></i>
+                        <span>Fuel Management</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Safety & Compliance</span>
                     </a>
                 </li>
 
                 <li class="sidebar-section-title">System</li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        <i class="fas fa-cogs"></i>
+                        <span>System Settings</span>
+                    </a>
+                </li>
                 <li class="sidebar-item">
                     <a href="#" class="sidebar-link" id="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
