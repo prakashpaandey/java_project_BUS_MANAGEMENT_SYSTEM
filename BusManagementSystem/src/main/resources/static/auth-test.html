@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+</head>
+
+<body>
+    <h1>Authentication Test Page</h1>
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const p = document.createElement('p');
+            p.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            p.textContent = message;
+            resultsDiv.appendChild(p);
+            console.log(message);
+        }
+
+        async function testAuth() {
+            log('=== AUTHENTICATION TEST ===', 'info');
+
+            // Step 1: Check if token exists
+            const token = localStorage.getItem('token');
+            if (!token) {
+                log('❌ NO TOKEN FOUND in localStorage', 'error');
+                log('Please login first at /login.html', 'error');
+                return;
+            }
+
+            log(`✅ Token found (length: ${token.length})`, 'success');
+            log(`Token preview: ${token.substring(0, 50)}...`, 'info');
+
+            // Step 2: Try to validate token
+            log('Sending validation request to /api/auth/validate...', 'info');
+
+            try {
+                const response = await fetch('/api/auth/validate', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+                log(`Response body: ${JSON.stringify(data, null, 2)}`, 'info');
+
+                if (data.valid === true) {
+                    log(`✅ AUTHENTICATION SUCCESSFUL!`, 'success');
+                    log(`User: ${data.admin.username}`, 'success');
+                    log(`Role: ${data.admin.role}`, 'success');
+                } else {
+                    log(`❌ Token is INVALID`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                log(`Full error: ${JSON.stringify(error)}`, 'error');
+            }
+        }
+
+        // Run test when page loads
+        window.addEventListener('DOMContentLoaded', testAuth);
+    </script>
+</body>
+
+</html>

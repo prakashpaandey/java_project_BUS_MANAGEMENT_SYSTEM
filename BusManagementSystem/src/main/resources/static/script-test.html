@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Script Load Test</title>
+</head>
+
+<body>
+    <h1>Script Load Test</h1>
+    <div id="log"></div>
+
+    <script>
+        // Log to page immediately
+        const logDiv = document.getElementById('log');
+        function log(msg) {
+            const p = document.createElement('p');
+            p.textContent = new Date().toISOString() + ': ' + msg;
+            logDiv.appendChild(p);
+            console.log(msg);
+        }
+
+        log('✅ Page HTML loaded');
+        log('✅ Inline script executing');
+
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        log(token ? `✅ Token exists (${token.length} chars)` : '❌ NO TOKEN');
+    </script>
+
+    <!-- Load luxon -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <script>
+        log(typeof luxon !== 'undefined' ? '✅ Luxon loaded' : '❌ Luxon FAILED');
+    </script>
+
+    <!-- Try to load app.js -->
+    <script src="app.js"></script>
+    <script>
+        log('✅ After app.js script tag');
+        log(typeof initApp === 'function' ? '✅ initApp function exists' : '❌ initApp NOT DEFINED');
+    </script>
+</body>
+
+</html>

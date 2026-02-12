@@ -1,3 +1,5 @@
+console.log('✨ [APP.JS] File loaded! Timestamp:', new Date().toISOString());
+
 const API_BASE = '/api';
 let currentUser = null;
 let currentToken = null;
@@ -1364,4 +1366,14 @@ window.deletePassenger = async (id) => {
 };
 
 // Start the app
-document.addEventListener('DOMContentLoaded', initApp);
+// TEMPORARY: Commented out to debug redirect issue
+// document.addEventListener('DOMContentLoaded', initApp);
+
+// Manual init function for testing
+window.manualInit = function() {
+    console.log('🔧 Manual init called');
+    initApp();
+};
+
+console.log('✅ [APP.JS] Reached end of file - DOMContentLoaded listener NOT attached');
+console.log('✅ [APP.JS] Call window.manualInit() to manually start auth');
