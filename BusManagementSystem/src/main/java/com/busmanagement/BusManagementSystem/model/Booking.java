@@ -30,7 +30,7 @@ public class Booking {
     private Double totalAmount;
 
     @Column(nullable = false)
-    private String paymentStatus; // PENDING, COMPLETED, FAILED, REFUNDED
+    private String paymentStatus;
 
     @Column(nullable = false)
     private String bookingStatus; 
