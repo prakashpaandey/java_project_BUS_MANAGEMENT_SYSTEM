@@ -33,7 +33,7 @@ public class Booking {
     private String paymentStatus; // PENDING, COMPLETED, FAILED, REFUNDED
 
     @Column(nullable = false)
-    private String bookingStatus; // CONFIRMED, CANCELLED
+    private String bookingStatus; 
 
     @Column(nullable = false)
     private LocalDateTime bookingDate;
