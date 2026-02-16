@@ -38,7 +38,7 @@ public class Booking {
     @Column(nullable = false)
     private LocalDateTime bookingDate;
 
-    private String seatNumbers; // Comma-separated seat numbers
+    private String seatNumbers; 
 
     @PrePersist
     public void setDefaultValues() {
